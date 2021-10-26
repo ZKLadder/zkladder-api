@@ -2,11 +2,13 @@ const { ethers } = require('ethers');
 const { ApplicationErrorWithObject } = require('../utils/error');
 const { getTransactionSigner } = require('./accounts');
 const { generateContractABI } = require('./compile');
+const { validateConstructorParams } = require('../utils/contract');
 
 const deployContract = async (contractId, networkId, constructParams) => {
   let compiledContract;
   try {
     compiledContract = generateContractABI(contractId);
+    validateConstructorParams(compiledContract.contracts['zk-contract.sol'].ZK_ERC721.abi, constructParams);
   } catch (error) {
     throw new ApplicationErrorWithObject(
       error.message,

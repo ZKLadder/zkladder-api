@@ -1,6 +1,6 @@
 const solc = require('solc');
 const { readFileSync } = require('fs');
-const getContractById = require('../contracts/getContractById');
+const { getContractById } = require('../utils/contract');
 
 const getContractSourceFromPath = (path) => {
   if (!path) throw new Error('getContractSourceFromPath called without path');
