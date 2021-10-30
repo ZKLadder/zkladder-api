@@ -1,14 +1,17 @@
 const { ethers } = require('ethers');
 const { ApplicationErrorWithObject } = require('../utils/error');
+const { getContractById } = require('../utils/contract');
 const { getTransactionSigner } = require('./accounts');
 const { generateContractABI } = require('./compile');
 const { validateConstructorParams } = require('../utils/contract');
 
 const deployContract = async (contractId, networkId, constructParams) => {
   let compiledContract;
+  const { name: contractName } = getContractById(contractId);
+
   try {
     compiledContract = generateContractABI(contractId);
-    validateConstructorParams(compiledContract.contracts['zk-contract.sol'].ZK_ERC721.abi, constructParams);
+    validateConstructorParams(compiledContract.contracts['zk-contract.sol'][contractName].abi, constructParams);
   } catch (error) {
     throw new ApplicationErrorWithObject(
       error.message,
@@ -34,8 +37,8 @@ const deployContract = async (contractId, networkId, constructParams) => {
 
   try {
     const contractFactory = new ethers.ContractFactory(
-      compiledContract.contracts['zk-contract.sol'].ZK_ERC721.abi,
-      compiledContract.contracts['zk-contract.sol'].ZK_ERC721.evm.bytecode.object,
+      compiledContract.contracts['zk-contract.sol'][contractName].abi,
+      compiledContract.contracts['zk-contract.sol'][contractName].evm.bytecode.object,
       transactionSigner,
     );
     const contract = await contractFactory.deploy(...constructParams);
