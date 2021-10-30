@@ -4,7 +4,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract ZK_ERC721 is ERC721, ERC721Enumerable {
+contract ERC721_Enumerable is ERC721, ERC721Enumerable {
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
     // The following functions are overrides required by Solidity.
