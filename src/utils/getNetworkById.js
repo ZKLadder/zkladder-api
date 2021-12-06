@@ -1,4 +1,4 @@
-const networks = require('../data/networkMapping');
+const networks = require('../data/constants/networkMapping');
 
 const getNetworkById = (networkId) => {
   if (!networks[networkId]) throw new Error('Requested unsupported network id');
