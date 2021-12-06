@@ -1,4 +1,4 @@
-const { keys } = require('../config');
+const { keys } = require('../../config');
 
 /* System accounts/private keys per network
    Only testnet accounts commited to source

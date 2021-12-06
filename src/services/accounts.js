@@ -1,5 +1,5 @@
 const { ethers } = require('ethers');
-const accounts = require('../data/accountMapping');
+const accounts = require('../data/constants/accountMapping');
 const getNetworkById = require('../utils/getNetworkById');
 
 const getAccountByNetworkId = (networkId) => {

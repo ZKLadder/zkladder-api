@@ -2,7 +2,7 @@ const {
   validateAddress, validateBoolean, validateString, validateNumber,
 } = require('./validators');
 
-const contracts = require('../data/contractMapping');
+const contracts = require('../data/constants/contractMapping');
 
 /**
  * Validates a given set of smart contract constructor params against a given ABI
