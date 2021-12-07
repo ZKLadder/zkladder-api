@@ -16,8 +16,8 @@ const mockNetwork = {
   },
 };
 
-jest.mock('../../src/data/networkMapping', () => (mockNetwork));
-jest.mock('../../src/data/accountMapping', () => (mockAccount));
+jest.mock('../../src/data/constants/networkMapping', () => (mockNetwork));
+jest.mock('../../src/data/constants/accountMapping', () => (mockAccount));
 
 const { ethers } = require('ethers');
 
