@@ -1,6 +1,3 @@
-// GET
-// POST
-// PATCH
 const express = require('express');
 const { createProject, getProjects, updateProject } = require('../../services/project');
 
