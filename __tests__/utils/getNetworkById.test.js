@@ -7,7 +7,7 @@ const mockNetwork = {
   },
 };
 
-jest.mock('../../src/data/networkMapping', () => (mockNetwork));
+jest.mock('../../src/data/constants/networkMapping', () => (mockNetwork));
 
 const getNetworkById = require('../../src/utils/getNetworkById');
 

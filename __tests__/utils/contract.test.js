@@ -13,7 +13,7 @@ jest.mock('../../src/utils/validators', () => ({
   validateAddress: jest.fn(),
 }));
 
-jest.mock('../../src/data/contractMapping', () => ({
+jest.mock('../../src/data/constants/contractMapping', () => ({
   999: {
     name: 'mockContract',
     id: 999,
