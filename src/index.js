@@ -1,3 +1,4 @@
+const cors = require('cors');
 const express = require('express');
 
 const app = express();
@@ -9,6 +10,14 @@ const logger = require('./utils/logger');
 const postgres = require('./data/postgres/index');
 
 app.use(express.json());
+
+app.use(cors({
+  origin: true, // allow any origin for now
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Accept', 'Authorization', 'Content-Type', 'Origin', 'Proxy-Authorization'],
+}));
+
 app.use('/api/v1', v1);
 app.use('/api', healthz);
 app.use('/', error);
