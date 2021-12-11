@@ -1,4 +1,4 @@
-const { keys } = require('../../config');
+const { accounts, keys } = require('../../config');
 
 /* System accounts/private keys per network
    Only testnet accounts commited to source
@@ -7,7 +7,7 @@ const { keys } = require('../../config');
 module.exports = {
   5777: [
     {
-      account: '0xB91BfC10875f9801D14F402F1b04159bfa774D7C',
+      account: accounts.ganache,
       privateKey: keys.ganache,
     },
   ],

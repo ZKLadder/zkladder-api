@@ -1,6 +1,9 @@
 require('dotenv/config');
 
 module.exports = {
+  accounts: {
+    ganache: process.env.GANACHE_ACCOUNT,
+  },
   keys: {
     ganache: process.env.GANACHE_PRIVATE_KEY,
     rinkeby: process.env.RINKEBY_PRIVATE_KEY,
