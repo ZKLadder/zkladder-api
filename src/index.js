@@ -22,6 +22,6 @@ app.use('/api/v1', v1);
 app.use('/api', healthz);
 app.use('/', error);
 
-app.listen(8081);
+app.listen(8080);
 logger.log(['App listening']);
 postgres.sync();
