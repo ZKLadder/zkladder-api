@@ -1,8 +1,14 @@
-<h5>Before opening this PR, please ensure your feature has been appropriately tested, and all relevant documentation and unit testing have been added </h5>
-<hr>
-<h4>Briefly describe the feature you are adding:</h4>
-<br>
-<br>
-<h4> If there is any additional context in a trello card, or github issue - paste a link:</h4>
-<br>
-<br>
+Before opening this PR, ensure that your feature has been appropriately tested, and relevant documentation and unit tests have been added
+
+## Why
+
+Brief note on the problem/need/benefit being addressed
+
+## What
+
+Brief note on what's changing / how it's done
+
+## Additional Context
+
+Optional if relevant, paste screenshots, links to trello, or any other additional context
+
