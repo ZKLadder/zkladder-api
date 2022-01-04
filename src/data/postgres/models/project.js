@@ -3,6 +3,11 @@ const sequelize = require('../index');
 const { validateAddress } = require('../../../utils/validators');
 
 const Project = sequelize.define('project', {
+  id: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    primaryKey: true,
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,

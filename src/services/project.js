@@ -1,4 +1,5 @@
 const { Op } = require('sequelize');
+const uniqueString = require('password-generator');
 const projectModel = require('../data/postgres/models/project');
 const { ClientError } = require('../utils/error');
 
@@ -7,8 +8,10 @@ const createProject = async (options) => {
     name, description, image, creator, admins,
   } = options;
 
+  const id = uniqueString(32, false);
+
   const newProject = await projectModel.create({
-    name, description, image, creator, admins,
+    id, name, description, image, creator, admins,
   });
 
   return newProject;
