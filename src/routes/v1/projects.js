@@ -1,9 +1,10 @@
 const express = require('express');
 const { createProject, getProjects, updateProject } = require('../../services/project');
+const authentication = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.post('/', async (req, res, next) => {
+router.post('/', authentication, async (req, res, next) => {
   try {
     const project = await createProject(req.body);
     res.send(project);
@@ -12,7 +13,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/', authentication, async (req, res, next) => {
   try {
     const projects = await getProjects(req.query);
     res.send(projects);
@@ -21,7 +22,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.patch('/', async (req, res, next) => {
+router.patch('/', authentication, async (req, res, next) => {
   try {
     const project = await updateProject(req.body);
     res.send(project);

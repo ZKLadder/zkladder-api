@@ -1,3 +1,4 @@
+const uniqueString = require('password-generator');
 const { createProject, getProjects, updateProject } = require('../../src/services/project');
 const { ClientError } = require('../../src/utils/error');
 
@@ -12,10 +13,13 @@ jest.mock('sequelize', () => ({
   Op: { contains: 'test_query' },
 }));
 
+jest.mock('password-generator');
+
 const mockProjectModel = require('../../src/data/postgres/models/project');
 
 describe('createProject tests', () => {
-  test('Calls model with correct parameters', async () => {
+  uniqueString.mockReturnValue('uniqueId');
+  test('Correctly calls dependencies', async () => {
     const options = {
       name: 'test',
       description: 'test description',
@@ -26,7 +30,9 @@ describe('createProject tests', () => {
     };
 
     await createProject(options);
+    expect(uniqueString).toHaveBeenCalledWith(32, false);
     expect(mockProjectModel.create).toHaveBeenCalledWith({
+      id: 'uniqueId',
       name: 'test',
       description: 'test description',
       image: '123',
