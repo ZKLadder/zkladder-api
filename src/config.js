@@ -3,9 +3,11 @@ require('dotenv/config');
 module.exports = {
   accounts: {
     ganache: process.env.GANACHE_ACCOUNT,
+    hardhat: process.env.HARDHAT_ACCOUNT,
   },
   keys: {
     ganache: process.env.GANACHE_PRIVATE_KEY,
+    hardhat: process.env.HARDHAT_PRIVATE_KEY,
     rinkeby: process.env.RINKEBY_PRIVATE_KEY,
     ropsten: process.env.ROPSTEN_PRIVATE_KEY,
   },

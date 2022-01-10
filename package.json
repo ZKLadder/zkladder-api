@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "nodemon --watch src/ --exec node src/index",
     "lint": "eslint",
+    "node": "npx hardhat node",
     "start": "node src/index",
-    "test": "jest"
+    "test": "jest",
+    "test:contracts": "npx hardhat test"
   },
   "repository": {
     "type": "git",
@@ -20,9 +22,12 @@
   },
   "homepage": "https://github.com/morozj01/zkladder-api#readme",
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
+    "chai": "^4.3.4",
     "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.24.2",
+    "hardhat": "^2.8.0",
     "jest": "^27.2.5",
     "nodemon": "^2.0.13"
   },
