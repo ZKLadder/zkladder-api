@@ -23,4 +23,10 @@ module.exports = {
       privateKey: keys.rinkeby,
     },
   ],
+  31337: [
+    {
+      account: accounts.hardhat,
+      privateKey: keys.hardhat,
+    },
+  ],
 };
