@@ -10,8 +10,8 @@ module.exports = {
     src: 'src/contracts/ERC20_Ownable_Mintable.sol',
   },
   3: {
-    name: 'ERC721_Generative_Whitelisted',
+    name: 'ERC721_Whitelisted',
     id: 3,
-    src: 'src/contracts/ERC721_Generative_Whitelisted.sol',
+    src: 'src/contracts/ERC721_Whitelisted.sol',
   },
 };

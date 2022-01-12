@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "hardhat/console.sol";
 
 /**
   @title Whitelisted ERC721
@@ -31,7 +30,7 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
     struct mintVoucher {
         string tokenUri;
         // Minter's allowed balance after mint has occured.
-        // Ie. if the voucher is valid for a single mint, balance = balanceOf(minter)+1
+        // Ie. if the voucher is valid for a single token, balance = balanceOf(minter)+1
         uint256 balance;
         address minter;
         bytes signature;
@@ -59,20 +58,18 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
       @param voucher A signed mint voucher
      */
     function mint(mintVoucher calldata voucher) public payable {
-        address signer = _verify(voucher);
-
-        uint256 balance = balanceOf(voucher.minter);
-
-        require(
-            hasRole(MINTER_ROLE, signer),
-            "Signature invalid or unauthorized"
-        );
-
         require(
             msg.value >= salePrice,
             "Insufficient ETH sent with transaction"
         );
 
+        address signer = _verify(voucher);
+        require(
+            hasRole(MINTER_ROLE, signer),
+            "Signature invalid or unauthorized"
+        );
+
+        uint256 balance = balanceOf(voucher.minter);
         require(
             voucher.balance > balance,
             "You are not authorized to mint any more tokens"
