@@ -1,5 +1,6 @@
 const cors = require('cors');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(cors({
   credentials: true,
   allowedHeaders: ['Accept', 'Authorization', 'Content-Type', 'Origin', 'Proxy-Authorization'],
 }));
+
+app.use(cookieParser());
 
 app.use('/api/v1', v1);
 app.use('/api', healthz);

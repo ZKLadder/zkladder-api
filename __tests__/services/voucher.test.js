@@ -15,12 +15,12 @@ jest.mock('../../src/data/postgres/models/voucher', () => ({
   destroy: jest.fn(),
 }));
 
-jest.mock('../../src/utils/signTypedData', () => ({
+jest.mock('../../src/utils/signatures', () => ({
   nftWhitelisted: jest.fn(),
 }));
 
 const mockVoucherModel = require('../../src/data/postgres/models/voucher');
-const { nftWhitelisted: mockNftWhitelisted } = require('../../src/utils/signTypedData');
+const { nftWhitelisted: mockNftWhitelisted } = require('../../src/utils/signatures');
 
 describe('createVoucher service', () => {
   test('Calls dependencies correctly', async () => {

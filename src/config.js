@@ -1,5 +1,11 @@
 require('dotenv/config');
 
+// @TODO Remove and defer to Member NFT
+const whiteList = [
+  '0x69887ffcEdC7E45314c956B0f3029B9C804d0158',
+  '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+];
+
 module.exports = {
   accounts: {
     ganache: process.env.GANACHE_ACCOUNT,
@@ -18,4 +24,7 @@ module.exports = {
     user: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
   },
+  whiteList: (process.env.ACCESS_WHITELIST?.split(',') || whiteList).map(
+    (address) => (address.toLowerCase()),
+  ),
 };

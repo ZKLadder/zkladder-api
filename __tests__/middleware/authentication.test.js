@@ -1,11 +1,9 @@
-const { utils } = require('ethers');
+const { hasAccess } = require('../../src/services/session');
 const authentication = require('../../src/routes/middleware/authentication');
 const { ClientError } = require('../../src/utils/error');
 
-jest.mock('ethers', () => ({
-  utils: {
-    verifyMessage: jest.fn(),
-  },
+jest.mock('../../src/services/session', () => ({
+  hasAccess: jest.fn(),
 }));
 
 describe('Authentication middleware', () => {
@@ -25,11 +23,11 @@ describe('Authentication middleware', () => {
       mockRes,
       mockNext,
     );
-    expect(utils.verifyMessage).toHaveBeenCalledWith(mockMessage, mockSignature);
+    expect(hasAccess).toHaveBeenCalledWith(Buffer.from(`${mockMessage}_${mockSignature}`).toString('base64'));
   });
 
   test('It correctly calls next() when signature is valid', async () => {
-    utils.verifyMessage.mockReturnValue('0x69887ffcEdC7E45314c956B0f3029B9C804d0158');
+    hasAccess.mockReturnValue(true);
     await authentication(
       mockReq,
       mockRes,
@@ -48,7 +46,7 @@ describe('Authentication middleware', () => {
   });
 
   test('It correctly calls next() when signature is not valid', async () => {
-    utils.verifyMessage.mockReturnValue('0x123456789');
+    hasAccess.mockReturnValue(false);
     await authentication(
       mockReq,
       mockRes,
