@@ -1,7 +1,7 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { BigNumber, utils } = require('ethers');
-const { nftWhitelisted } = require('../../src/utils/signTypedData');
+const { nftWhitelisted } = require('../../src/utils/signatures');
 
 describe('ERC721_Whitelisted', () => {
   let ERC721Whitelisted;

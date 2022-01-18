@@ -1,6 +1,6 @@
 const voucherModel = require('../data/postgres/models/voucher');
 const { ClientError } = require('../utils/error');
-const { nftWhitelisted } = require('../utils/signTypedData');
+const { nftWhitelisted } = require('../utils/signatures');
 
 const createVoucher = async (options) => {
   const {
