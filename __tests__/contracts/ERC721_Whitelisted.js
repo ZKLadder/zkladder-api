@@ -1,7 +1,11 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { BigNumber, utils } = require('ethers');
+<<<<<<< HEAD
 const { nftWhitelistedVoucher } = require('../../src/utils/signatures');
+=======
+const { nftWhitelisted } = require('../../src/utils/signatures');
+>>>>>>> e67f9fbe937e9baa6193899d1ed6e3e1888d91de
 
 describe('ERC721_Whitelisted', () => {
   let ERC721Whitelisted;
