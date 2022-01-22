@@ -1,16 +1,8 @@
-<<<<<<< HEAD
 const { hasAccess } = require('../../src/utils/signatures');
 const authentication = require('../../src/routes/middleware/authentication');
 const { ClientError } = require('../../src/utils/error');
 
 jest.mock('../../src/utils/signatures', () => ({
-=======
-const { hasAccess } = require('../../src/services/session');
-const authentication = require('../../src/routes/middleware/authentication');
-const { ClientError } = require('../../src/utils/error');
-
-jest.mock('../../src/services/session', () => ({
->>>>>>> e67f9fbe937e9baa6193899d1ed6e3e1888d91de
   hasAccess: jest.fn(),
 }));
 
