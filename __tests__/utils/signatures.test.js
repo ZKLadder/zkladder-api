@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const sigUtil = require('@metamask/eth-sig-util');
-const { nftWhitelisted, hasAccess } = require('../../src/utils/signatures');
+const { nftWhitelistedVoucher, hasAccess } = require('../../src/utils/signatures');
 const { getTransactionSigner } = require('../../src/services/accounts');
 
 const mockBuffer = jest.fn();
@@ -33,11 +33,10 @@ describe('signTypedData for whiteListed NFT tests', () => {
       _signTypedData: mockSignTypedData,
     });
 
-    await nftWhitelisted({
+    await nftWhitelistedVoucher({
       chainId: 123,
       contractName: 'mockContract',
       contractAddress: '0x123456789',
-      tokenUri: 'http://mock.com',
       balance: 1,
       minter: '0x987654321',
     });
@@ -53,13 +52,11 @@ describe('signTypedData for whiteListed NFT tests', () => {
       },
       {
         mintVoucher: [
-          { name: 'tokenUri', type: 'string' },
           { name: 'balance', type: 'uint256' },
           { name: 'minter', type: 'address' },
         ],
       },
       {
-        tokenUri: 'http://mock.com',
         balance: 1,
         minter: '0x987654321',
       },
@@ -71,12 +68,11 @@ describe('signTypedData for whiteListed NFT tests', () => {
       _signTypedData: jest.fn(),
     };
 
-    await nftWhitelisted({
+    await nftWhitelistedVoucher({
       chainId: 123,
       contractName: 'mockContract',
       contractAddress: '0x123456789',
       wallet: mockWallet,
-      tokenUri: 'http://mock.com',
       balance: 1,
       minter: '0x987654321',
     });
@@ -92,13 +88,11 @@ describe('signTypedData for whiteListed NFT tests', () => {
       },
       {
         mintVoucher: [
-          { name: 'tokenUri', type: 'string' },
           { name: 'balance', type: 'uint256' },
           { name: 'minter', type: 'address' },
         ],
       },
       {
-        tokenUri: 'http://mock.com',
         balance: 1,
         minter: '0x987654321',
       },
@@ -110,18 +104,16 @@ describe('signTypedData for whiteListed NFT tests', () => {
       _signTypedData: jest.fn(() => ('0xmockSignature')),
     };
 
-    const result = await nftWhitelisted({
+    const result = await nftWhitelistedVoucher({
       chainId: 123,
       contractName: 'mockContract',
       contractAddress: '0x123456789',
       wallet: mockWallet,
-      tokenUri: 'http://mock.com',
       balance: 1,
       minter: '0x987654321',
     });
 
     expect(result).toStrictEqual({
-      tokenUri: 'http://mock.com',
       balance: 1,
       minter: '0x987654321',
       signature: '0xmockSignature',

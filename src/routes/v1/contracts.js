@@ -25,9 +25,13 @@ router.get('/:contractId/abi', async (req, res, next) => {
     if (!contractId) {
       throw new ClientError('Missing required body field');
     }
-    const { name, id } = getContractById(contractId);
-    const { abi } = generateContractABI(contractId).contracts['zk-contract.sol'][name];
-    res.send({ name, id, abi });
+    const { name } = getContractById(contractId);
+    const compiledContract = generateContractABI(contractId);
+    const { abi } = compiledContract;
+    const bytecode = compiledContract.evm.bytecode.object;
+    res.send({
+      name, contractId, abi, bytecode,
+    });
   } catch (error) {
     next(error);
   }

@@ -9,13 +9,12 @@ const { whiteList } = require('../config');
  * @param {*} options Signature and mint options
  * @returns Signed mint voucher
  */
-const nftWhitelisted = async (options) => {
+const nftWhitelistedVoucher = async (options) => {
   const {
     chainId,
     contractName,
     contractAddress,
     wallet,
-    tokenUri,
     balance,
     minter,
   } = options;
@@ -31,14 +30,12 @@ const nftWhitelisted = async (options) => {
 
   const types = {
     mintVoucher: [
-      { name: 'tokenUri', type: 'string' },
       { name: 'balance', type: 'uint256' },
       { name: 'minter', type: 'address' },
     ],
   };
 
   const value = {
-    tokenUri,
     balance,
     minter,
   };
@@ -46,7 +43,6 @@ const nftWhitelisted = async (options) => {
   const signature = await signer._signTypedData(domain, types, value);
 
   return {
-    tokenUri,
     balance,
     minter,
     signature,
@@ -81,4 +77,4 @@ const hasAccess = (signature) => {
   return true;
 };
 
-module.exports = { nftWhitelisted, hasAccess };
+module.exports = { nftWhitelistedVoucher, hasAccess };

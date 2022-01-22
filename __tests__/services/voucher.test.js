@@ -1,12 +1,14 @@
+const ethers = require('ethers');
 const {
-  createVoucher,
+  storeVoucher,
   deleteVoucher,
-  getVouchers,
-  getMostRecentVoucher,
-  signVoucher,
+  getAllVouchers,
+  getVoucher,
 } = require('../../src/services/voucher');
 
+const { getAccountByNetworkId } = require('../../src/services/accounts');
 const { ClientError } = require('../../src/utils/error');
+const { generateContractABI } = require('../../src/services/compile');
 
 jest.mock('../../src/data/postgres/models/voucher', () => ({
   create: jest.fn(),
@@ -16,22 +18,41 @@ jest.mock('../../src/data/postgres/models/voucher', () => ({
 }));
 
 jest.mock('../../src/utils/signatures', () => ({
-  nftWhitelisted: jest.fn(),
+  nftWhitelistedVoucher: jest.fn(),
+}));
+
+jest.mock('../../src/services/compile', () => ({
+  generateContractABI: jest.fn(),
+}));
+
+jest.mock('../../src/services/accounts', () => ({
+  getAccountByNetworkId: jest.fn(),
+  getTransactionSigner: jest.fn(),
+}));
+
+jest.mock('ethers', () => ({
+  Contract: jest.fn(),
+  utils: {
+    keccak256: jest.fn(),
+    toUtf8Bytes: jest.fn(),
+  },
 }));
 
 const mockVoucherModel = require('../../src/data/postgres/models/voucher');
-const { nftWhitelisted: mockNftWhitelisted } = require('../../src/utils/signatures');
+const { nftWhitelistedVoucher: mockNftWhitelistedVoucher } = require('../../src/utils/signatures');
 
-describe('createVoucher service', () => {
+describe('storeVoucher service', () => {
   test('Calls dependencies correctly', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const signedVoucher = 'MOCKJSON';
 
-    await createVoucher({
+    await storeVoucher({
       contractAddress,
       userAddress,
       balance,
+      signedVoucher,
     });
 
     expect(mockVoucherModel.findOne).toHaveBeenCalledWith({
@@ -44,6 +65,7 @@ describe('createVoucher service', () => {
       contractAddress,
       userAddress,
       balance,
+      signedVoucher,
     });
   });
 
@@ -54,7 +76,7 @@ describe('createVoucher service', () => {
 
     mockVoucherModel.findOne.mockResolvedValueOnce({ exists: true });
 
-    await expect(createVoucher({
+    await expect(storeVoucher({
       contractAddress,
       userAddress,
       balance,
@@ -65,13 +87,15 @@ describe('createVoucher service', () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const signedVoucher = 'MOCKJSON';
 
     mockVoucherModel.create.mockResolvedValueOnce({ mock: 'voucher' });
 
-    const result = await createVoucher({
+    const result = await storeVoucher({
       contractAddress,
       userAddress,
       balance,
+      signedVoucher,
     });
 
     expect(result).toEqual({ mock: 'voucher' });
@@ -115,8 +139,8 @@ describe('deleteVoucher service', () => {
   });
 });
 
-describe('getVouchers service', () => {
-  test('Calls dependencies correctly', async () => {
+describe('getAllVouchers function', () => {
+  test('Calls dependencies correctly and returns response', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
 
@@ -124,14 +148,13 @@ describe('getVouchers service', () => {
       mock: 'response',
     });
 
-    const result = await getVouchers({ contractAddress, userAddress });
+    const result = await getAllVouchers({ contractAddress, userAddress });
 
     expect(mockVoucherModel.findAll).toHaveBeenCalledWith({
       where: {
         userAddress,
         contractAddress,
       },
-      order: [['createdAt', 'DESC']],
       raw: true,
     });
 
@@ -141,93 +164,76 @@ describe('getVouchers service', () => {
   });
 });
 
-describe('getMostRecentVoucher service', () => {
-  test('Calls dependencies correctly', async () => {
+describe('getVoucher function', () => {
+  test('Calls dependencies correctly and returns result when voucher exists in DB', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
 
     mockVoucherModel.findAll.mockResolvedValueOnce([
-      { result: 'one' },
-      { result: 'two' },
-      { result: 'three' },
+      { result: 'one', balance: 4 },
+      { result: 'two', balance: 100 },
+      { result: 'three', balance: 123 },
     ]);
 
-    const result = await getMostRecentVoucher({ contractAddress, userAddress });
+    const result = await getVoucher({ contractAddress, userAddress });
 
     expect(mockVoucherModel.findAll).toHaveBeenCalledWith({
       where: {
         userAddress,
         contractAddress,
       },
-      order: [['createdAt', 'DESC']],
       raw: true,
     });
 
     expect(result).toStrictEqual(
-      { result: 'one' },
-    );
-  });
-});
-
-describe('signVoucher service', () => {
-  test('Calls dependencies correctly', async () => {
-    const contractAddress = '0xmockContract';
-    const userAddress = '0xmockUser';
-    const tokenUri = 'https://tokenUri.com';
-    const balance = 1;
-    const chainId = '123';
-    const contractName = 'MockNFT';
-
-    mockVoucherModel.findOne.mockResolvedValueOnce(
-      { mock: 'voucher' },
-    );
-
-    mockNftWhitelisted.mockResolvedValueOnce(
-      { mock: 'result' },
-    );
-
-    const result = await signVoucher({
-      contractAddress,
-      userAddress,
-      tokenUri,
-      balance,
-      chainId,
-      contractName,
-    });
-
-    expect(mockNftWhitelisted).toHaveBeenCalledWith({
-      contractAddress,
-      minter: userAddress,
-      tokenUri,
-      balance,
-      chainId,
-      contractName,
-    });
-
-    expect(result).toStrictEqual(
-      { mock: 'result' },
+      { result: 'three', balance: 123 },
     );
   });
 
-  test('Calls dependencies correctly', async () => {
+  test('Calls dependencies and returns result when voucher does NOT exist in DB and autominting is ON', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
-    const tokenUri = 'https://tokenUri.com';
-    const balance = 1;
     const chainId = '123';
-    const contractName = 'MockNFT';
 
-    mockVoucherModel.findOne.mockResolvedValueOnce(undefined);
+    mockVoucherModel.findAll.mockResolvedValueOnce([]);
+    generateContractABI.mockResolvedValue({ abi: 'mock' });
+    getAccountByNetworkId.mockReturnValue([{ account: 'mockAccount' }]);
 
-    await expect(signVoucher({
+    jest.spyOn(ethers, 'Contract').mockImplementation(() => ({
+      balanceOf: jest.fn().mockResolvedValue({ toNumber: () => (111) }),
+      name: jest.fn().mockResolvedValue('Test Name'),
+      hasRole: jest.fn().mockResolvedValue(true),
+    }));
+
+    mockNftWhitelistedVoucher.mockResolvedValue({ mock: 'Voucher' });
+
+    const result = await getVoucher({ contractAddress, userAddress, chainId });
+
+    expect(result).toStrictEqual({
       contractAddress,
       userAddress,
-      tokenUri,
-      balance,
-      chainId,
-      contractName,
-    })).rejects.toEqual(new ClientError('This account is not approved to mint a token at this contract address'));
+      balance: 112,
+      signedVoucher: { mock: 'Voucher' },
+    });
+  });
 
-    expect(mockNftWhitelisted).not.toHaveBeenCalled();
+  test('Throws when a mint voucher does not exist in the DB and autominting is disabled', async () => {
+    const contractAddress = '0xmockContract';
+    const userAddress = '0xmockUser';
+    const chainId = '123';
+
+    mockVoucherModel.findAll.mockResolvedValueOnce([]);
+    generateContractABI.mockResolvedValue({ abi: 'mock' });
+    getAccountByNetworkId.mockReturnValue([{ account: 'mockAccount' }]);
+
+    jest.spyOn(ethers, 'Contract').mockImplementation(() => ({
+      balanceOf: jest.fn().mockResolvedValue({ toNumber: () => (111) }),
+      name: jest.fn().mockResolvedValue('Test Name'),
+      hasRole: jest.fn().mockResolvedValue(false),
+    }));
+
+    await expect(getVoucher({ contractAddress, userAddress, chainId })).rejects.toThrow(
+      new ClientError('This account is not approved to mint a token at this contract address'),
+    );
   });
 });

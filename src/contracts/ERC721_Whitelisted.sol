@@ -4,7 +4,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
@@ -13,14 +13,19 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
   @notice NFT contract enabling administrative token minting with a MINTER_ROLE or public token minting with a signed mint voucher
   @author ZKLadder DAO
  */
-contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
+contract ERC721_Whitelisted is
+    ERC721,
+    ERC721URIStorage,
+    AccessControlEnumerable,
+    EIP712
+{
     string public baseUri;
 
     // Recieves proceeds from new mints
     address payable public beneficiaryAddress;
 
     // Current mint price in WEI
-    uint256 public salePrice = 0;
+    uint256 public salePrice;
 
     using Counters for Counters.Counter;
     Counters.Counter private _totalSupply;
@@ -28,7 +33,6 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     struct mintVoucher {
-        string tokenUri;
         // Minter's allowed balance after mint has occured.
         // Ie. if the voucher is valid for a single token, balance = balanceOf(minter)+1
         uint256 balance;
@@ -57,7 +61,10 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
       @notice Public function enabling any account to request to mint with a mintVoucher. Minting is only permitted if the voucher is signed by an account assigned to a MINTER_ROLE
       @param voucher A signed mint voucher
      */
-    function mint(mintVoucher calldata voucher) public payable {
+    function mint(mintVoucher calldata voucher, string memory tokenUri)
+        public
+        payable
+    {
         require(
             msg.value >= salePrice,
             "Insufficient ETH sent with transaction"
@@ -77,7 +84,7 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
 
         uint256 tokenId = totalSupply();
         _safeMint(voucher.minter, tokenId);
-        _setTokenURI(tokenId, voucher.tokenUri);
+        _setTokenURI(tokenId, tokenUri);
         _totalSupply.increment();
 
         (bool success, bytes memory returnData) = beneficiaryAddress.call{
@@ -147,9 +154,8 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "mintVoucher(string tokenUri,uint256 balance,address minter)"
+                            "mintVoucher(uint256 balance,address minter)"
                         ),
-                        keccak256(bytes(voucher.tokenUri)),
                         voucher.balance,
                         voucher.minter
                     )
@@ -186,7 +192,7 @@ contract ERC721_Whitelisted is ERC721, ERC721URIStorage, AccessControl, EIP712 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, AccessControl)
+        override(ERC721, AccessControlEnumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

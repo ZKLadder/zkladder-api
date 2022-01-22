@@ -13,13 +13,13 @@ module.exports = {
   ],
   3: [
     {
-      account: '0x69887ffcEdC7E45314c956B0f3029B9C804d0158',
+      account: '0x4a26262236378f0aff37edf6ab7b3ba7452782af',
       privateKey: keys.ropsten,
     },
   ],
   4: [
     {
-      account: '0x69887ffcEdC7E45314c956B0f3029B9C804d0158',
+      account: '0x4a26262236378f0aff37edf6ab7b3ba7452782af',
       privateKey: keys.rinkeby,
     },
   ],
