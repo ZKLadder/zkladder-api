@@ -1,7 +1,7 @@
 const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { BigNumber, utils } = require('ethers');
-const { nftWhitelisted } = require('../../src/utils/signatures');
+const { nftWhitelistedVoucher } = require('../../src/utils/signatures');
 
 describe('ERC721_Whitelisted', () => {
   let ERC721Whitelisted;
@@ -199,11 +199,10 @@ describe('ERC721_Whitelisted', () => {
     // Malformed signature
     try {
       const mintMalformedStructTx = await nonAdmin.mint({
-        tokenUri: 'https://mockToken.com',
         balance: 1,
         minter: signers[1].address,
         signature: utils.toUtf8Bytes('0xmockSigntatureData'),
-      });
+      }, 'https://mockToken.com');
 
       await mintMalformedStructTx.wait();
     } catch (error) {
@@ -212,16 +211,15 @@ describe('ERC721_Whitelisted', () => {
 
     // Signed by non-admin
     try {
-      const signature = await nftWhitelisted({
+      const signature = await nftWhitelistedVoucher({
         chainId: 31337,
         contractName: 'MockNFT',
         contractAddress: nonAdmin.address,
         wallet: signers[1],
-        tokenUri: 'https://mockToken.com',
         balance: 1,
         minter: signers[1].address,
       });
-      const invalidSigTx = await nonAdmin.mint(signature);
+      const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
       await invalidSigTx.wait();
     } catch (error) {
       expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'Signature invalid or unauthorized\'');
@@ -229,16 +227,15 @@ describe('ERC721_Whitelisted', () => {
 
     // Valid signature but max balance reached
     try {
-      const signature = await nftWhitelisted({
+      const signature = await nftWhitelistedVoucher({
         chainId: 31337,
         contractName: 'MockNFT',
         contractAddress: nonAdmin.address,
         wallet: signers[0],
-        tokenUri: 'https://mockToken.com',
         balance: 0,
         minter: signers[1].address,
       });
-      const invalidSigTx = await nonAdmin.mint(signature);
+      const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
       await invalidSigTx.wait();
     } catch (error) {
       expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'You are not authorized to mint any more tokens\'');
@@ -250,16 +247,15 @@ describe('ERC721_Whitelisted', () => {
 
     const nonAdmin = ERC721Whitelisted.connect(signers[1]);
 
-    const signature = await nftWhitelisted({
+    const signature = await nftWhitelistedVoucher({
       chainId: 31337,
       contractName: 'MockNFT',
       contractAddress: nonAdmin.address,
       wallet: signers[0],
-      tokenUri: 'https://mockToken.com',
       balance: 1,
       minter: signers[1].address,
     });
-    const invalidSigTx = await nonAdmin.mint(signature);
+    const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
     await invalidSigTx.wait();
 
     expect(await ERC721Whitelisted.totalSupply()).to.deep.equal(BigNumber.from(1));

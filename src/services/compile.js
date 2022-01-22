@@ -21,6 +21,7 @@ const getContractImport = (path) => {
 };
 
 const generateContractABI = ((contractId) => {
+  const { name } = getContractById(3);
   const input = {
     language: 'Solidity',
     sources: {
@@ -37,7 +38,7 @@ const generateContractABI = ((contractId) => {
 
   return JSON.parse(
     solc.compile(JSON.stringify(input), { import: getContractImport }),
-  );
+  ).contracts['zk-contract.sol'][name];
 });
 
 module.exports = {

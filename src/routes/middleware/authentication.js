@@ -1,4 +1,4 @@
-const { hasAccess } = require('../../services/session');
+const { hasAccess } = require('../../utils/signatures');
 const { ClientError } = require('../../utils/error');
 
 const authentication = (req, res, next) => {
