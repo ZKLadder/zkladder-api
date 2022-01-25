@@ -3,8 +3,28 @@ const { ClientError } = require('../../utils/error');
 const { deployContract } = require('../../services/deploy');
 const { getContractById } = require('../../utils/contract');
 const { generateContractABI } = require('../../services/compile');
+const { createContract, getContracts } = require('../../services/contract');
+const authentication = require('../middleware/authentication');
 
 const router = express.Router();
+
+router.post('/', authentication, async (req, res, next) => {
+  try {
+    const contract = await createContract(req.body);
+    res.send(contract);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/', authentication, async (req, res, next) => {
+  try {
+    const contracts = await getContracts(req.query);
+    res.send(contracts);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post('/deploy', async (req, res, next) => {
   try {

@@ -2,8 +2,9 @@ require('dotenv/config');
 
 // @TODO Remove and defer to Member NFT
 const whiteList = [
-  '0x69887ffcEdC7E45314c956B0f3029B9C804d0158',
-  '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+  '0x69887ffcEdC7E45314c956B0f3029B9C804d0158', // Justin metamask
+  '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', // Hardhat Account [0]
+  '0x4a26262236378f0aff37edf6ab7b3ba7452782af', // ZKL Signer
 ];
 
 module.exports = {

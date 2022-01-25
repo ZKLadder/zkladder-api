@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "api-key": "node scripts/generateApiKey",
     "dev": "nodemon --watch src/ --exec node src/index",
     "lint": "eslint",
     "node": "npx hardhat node",
