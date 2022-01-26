@@ -76,6 +76,36 @@ describe('ERC721_Whitelisted', () => {
     }
   });
 
+  it('Initially returns 0 for royalty', async () => {
+    const [reciever, royaltyAmount] = await ERC721Whitelisted.royaltyInfo(5, 100);
+    expect(reciever.toLowerCase()).to.equal('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'.toLowerCase());
+    expect(royaltyAmount.toNumber()).to.equal(0);
+  });
+
+  it('Correctly sets royaltyBasis', async () => {
+    const tx = await ERC721Whitelisted.setRoyalty(500);
+    await tx.wait();
+
+    const [reciever, royaltyAmount] = await ERC721Whitelisted.royaltyInfo(5, 100);
+
+    expect(reciever.toLowerCase()).to.equal('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'.toLowerCase());
+    expect(royaltyAmount.toNumber()).to.equal(5);
+  });
+
+  it('Throws when a non-admin calls setRoyalty', async () => {
+    const signers = await ethers.getSigners();
+
+    const nonAdmin = ERC721Whitelisted.connect(signers[1]);
+
+    try {
+      const tx = await nonAdmin.setRoyalty(500);
+      await tx.wait();
+      expect(true).to.equal(false);
+    } catch (error) {
+      expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'AccessControl: account 0x70997970c51812dc3a010c7d01b50e0d17dc79c8 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000\'');
+    }
+  });
+
   it('Correctly mints a token with mintTo', async () => {
     const signers = await ethers.getSigners();
     const balance = await ERC721Whitelisted.totalSupply();
@@ -262,5 +292,194 @@ describe('ERC721_Whitelisted', () => {
     expect(await ERC721Whitelisted.balanceOf(signers[1].address)).to.deep.equal(BigNumber.from(1));
     expect(await ERC721Whitelisted.ownerOf(0)).to.equal(signers[1].address);
     expect(await ERC721Whitelisted.tokenURI(0)).to.equal('https://mockToken.com');
+  });
+
+  it('Correctly sets isTransferable to true by default', async () => {
+    const isTransferable = await ERC721Whitelisted.isTransferable();
+    expect(isTransferable).to.equal(true);
+  });
+
+  it('Mint and transferFrom workflow when isTransferrable==true', async () => {
+    const signers = await ethers.getSigners();
+    const from = signers[1];
+    const to = signers[2];
+
+    const tx = await ERC721Whitelisted.mintTo(signers[1].address, 'http://mockURI.com');
+    await tx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(0);
+
+    const transferTx = await ERC721Whitelisted.connect(from).transferFrom(
+      signers[1].address,
+      signers[2].address,
+      0,
+    );
+    await transferTx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(1);
+  });
+
+  it('Mint and transferFrom workflow when isTransferrable==false', async () => {
+    const signers = await ethers.getSigners();
+    const from = signers[1];
+    const to = signers[2];
+
+    const setTransferTx = await ERC721Whitelisted.setIsTransferrable(false);
+    await setTransferTx.wait();
+
+    const mintTx = await ERC721Whitelisted.mintTo(signers[1].address, 'http://mockURI.com');
+    await mintTx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(0);
+
+    try {
+      const transferTx = await ERC721Whitelisted.connect(from).transferFrom(
+        signers[1].address,
+        signers[2].address,
+        0,
+      );
+      await transferTx.wait();
+      expect(true).to.be(false);
+    } catch (error) {
+      expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'This NFT is non transferrable\'');
+    }
+  });
+
+  it('Admin Mint and transferFrom workflow when isTransferrable==false', async () => {
+    const signers = await ethers.getSigners();
+
+    // Disable transfers
+    const setTransferTx = await ERC721Whitelisted.setIsTransferrable(false);
+    await setTransferTx.wait();
+
+    // Mint a token to an admin account
+    const mintTx = await ERC721Whitelisted.mintTo(signers[0].address, 'http://mockURI.com');
+    await mintTx.wait();
+
+    // Mint a token to a non-admin
+    const mint2Tx = await await ERC721Whitelisted.mintTo(signers[2].address, 'http://mockURI.com');
+    await mint2Tx.wait();
+
+    // Sanity checks
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(1);
+
+    // Test transfer where 'from' == admin
+    const transferTx = await ERC721Whitelisted.transferFrom(
+      signers[0].address,
+      signers[1].address,
+      0,
+    );
+    await transferTx.wait();
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(1);
+
+    // Test transfer where 'to' == admin
+    const transfer2Tx = await ERC721Whitelisted.connect(signers[2]).transferFrom(
+      signers[2].address,
+      signers[0].address,
+      1,
+    );
+    await transfer2Tx.wait();
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(0);
+  });
+
+  it('Mint and safeTransferFrom workflow when isTransferrable==true', async () => {
+    const signers = await ethers.getSigners();
+    const from = signers[1];
+    const to = signers[2];
+
+    const tx = await ERC721Whitelisted.mintTo(signers[1].address, 'http://mockURI.com');
+    await tx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(0);
+
+    const transferTx = await ERC721Whitelisted.connect(from)['safeTransferFrom(address,address,uint256)'](
+      signers[1].address,
+      signers[2].address,
+      0,
+    );
+    await transferTx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(1);
+  });
+
+  it('Mint and safeTransferFrom workflow when isTransferrable==false', async () => {
+    const signers = await ethers.getSigners();
+    const from = signers[1];
+    const to = signers[2];
+
+    const setTransferTx = await ERC721Whitelisted.setIsTransferrable(false);
+    await setTransferTx.wait();
+
+    const mintTx = await ERC721Whitelisted.mintTo(signers[1].address, 'http://mockURI.com');
+    await mintTx.wait();
+
+    expect((await ERC721Whitelisted.balanceOf(from.address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(to.address)).toNumber()).to.equal(0);
+
+    try {
+      const transferTx = await ERC721Whitelisted.connect(from)['safeTransferFrom(address,address,uint256)'](
+        signers[1].address,
+        signers[2].address,
+        0,
+      );
+      await transferTx.wait();
+      expect(true).to.be(false);
+    } catch (error) {
+      expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'This NFT is non transferrable\'');
+    }
+  });
+
+  it('Admin Mint and safeTransferFrom workflow when isTransferrable==false', async () => {
+    const signers = await ethers.getSigners();
+
+    // Disable transfers
+    const setTransferTx = await ERC721Whitelisted.setIsTransferrable(false);
+    await setTransferTx.wait();
+
+    // Mint a token to an admin account
+    const mintTx = await ERC721Whitelisted.mintTo(signers[0].address, 'http://mockURI.com');
+    await mintTx.wait();
+
+    // Mint a token to a non-admin
+    const mint2Tx = await await ERC721Whitelisted.mintTo(signers[2].address, 'http://mockURI.com');
+    await mint2Tx.wait();
+
+    // Sanity checks
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(1);
+
+    // Test transfer where 'from' == admin
+    const transferTx = await ERC721Whitelisted['safeTransferFrom(address,address,uint256)'](
+      signers[0].address,
+      signers[1].address,
+      0,
+    );
+    await transferTx.wait();
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(0);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(1);
+
+    // Test transfer where 'to' == admin
+    const transfer2Tx = await ERC721Whitelisted.connect(signers[2])['safeTransferFrom(address,address,uint256)'](
+      signers[2].address,
+      signers[0].address,
+      1,
+    );
+    await transfer2Tx.wait();
+    expect((await ERC721Whitelisted.balanceOf(signers[0].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[1].address)).toNumber()).to.equal(1);
+    expect((await ERC721Whitelisted.balanceOf(signers[2].address)).toNumber()).to.equal(0);
   });
 });

@@ -27,6 +27,12 @@ contract ERC721_Whitelisted is
     // Current mint price in WEI
     uint256 public salePrice;
 
+    // Can NFT's be transferred
+    bool public isTransferrable = true;
+
+    // Royalty in basis points ie. 500 = 5%
+    uint256 private _royaltyBasis;
+
     using Counters for Counters.Counter;
     Counters.Counter private _totalSupply;
 
@@ -55,6 +61,55 @@ contract ERC721_Whitelisted is
     // Getters
     function totalSupply() public view returns (uint256) {
         return _totalSupply.current();
+    }
+
+    /**
+     * EIP-2981 compliant royalty info
+     */
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        return (
+            beneficiaryAddress,
+            uint256((_salePrice * _royaltyBasis) / 10000)
+        );
+    }
+
+    /**
+     * Override transferFrom to enforce isTransferrable check
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        require(
+            (isTransferrable ||
+                hasRole(DEFAULT_ADMIN_ROLE, from) ||
+                hasRole(DEFAULT_ADMIN_ROLE, to)),
+            "This NFT is non transferrable"
+        );
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /**
+     * Override safeTransferFrom to enforce isTransferrable check
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory _data
+    ) public virtual override {
+        require(
+            (isTransferrable ||
+                hasRole(DEFAULT_ADMIN_ROLE, from) ||
+                hasRole(DEFAULT_ADMIN_ROLE, to)),
+            "This NFT is non transferrable"
+        );
+        super.safeTransferFrom(from, to, tokenId, _data);
     }
 
     /**
@@ -123,13 +178,35 @@ contract ERC721_Whitelisted is
 
     /**
       @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the beneficiaryAddress which recieves proceeds from any new token mint
-      @param newBeneficiary The acccount which will now recieve all proceeds from new token mints
+      @param newBeneficiary The account which will now recieve all proceeds from new token mints
      */
     function setBeneficiary(address payable newBeneficiary)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         beneficiaryAddress = newBeneficiary;
+    }
+
+    /**
+      @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the transferrability of the collection's NFT's
+      @param _isTransferrable boolean indiciating if NFT's can be transffered
+     */
+    function setIsTransferrable(bool _isTransferrable)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        isTransferrable = _isTransferrable;
+    }
+
+    /**
+      @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the royalty on NFT sales
+      @param royaltyBasis new royalty in basis points - ie. 250 = 2.5%
+     */
+    function setRoyalty(uint256 royaltyBasis)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        _royaltyBasis = royaltyBasis;
     }
 
     /**
