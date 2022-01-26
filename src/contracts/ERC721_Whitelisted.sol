@@ -31,7 +31,7 @@ contract ERC721_Whitelisted is
     bool public isTransferrable = true;
 
     // Royalty in basis points ie. 500 = 5%
-    uint256 private _royaltyBasis;
+    uint256 public royaltyBasis;
 
     using Counters for Counters.Counter;
     Counters.Counter private _totalSupply;
@@ -73,7 +73,7 @@ contract ERC721_Whitelisted is
     {
         return (
             beneficiaryAddress,
-            uint256((_salePrice * _royaltyBasis) / 10000)
+            uint256((_salePrice * royaltyBasis) / 10000)
         );
     }
 
@@ -200,13 +200,13 @@ contract ERC721_Whitelisted is
 
     /**
       @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the royalty on NFT sales
-      @param royaltyBasis new royalty in basis points - ie. 250 = 2.5%
+      @param _royaltyBasis new royalty in basis points - ie. 250 = 2.5%
      */
-    function setRoyalty(uint256 royaltyBasis)
+    function setRoyalty(uint256 _royaltyBasis)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        _royaltyBasis = royaltyBasis;
+        royaltyBasis = _royaltyBasis;
     }
 
     /**
