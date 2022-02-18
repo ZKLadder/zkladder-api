@@ -294,8 +294,8 @@ describe('ERC721_Whitelisted', () => {
     expect(await ERC721Whitelisted.tokenURI(0)).to.equal('https://mockToken.com');
   });
 
-  it('Correctly sets isTransferable to true by default', async () => {
-    const isTransferable = await ERC721Whitelisted.isTransferable();
+  it('Correctly sets isTransferrable to true by default', async () => {
+    const isTransferable = await ERC721Whitelisted.isTransferrable();
     expect(isTransferable).to.equal(true);
   });
 
