@@ -46,8 +46,10 @@ describe('getSession tests', () => {
 
 describe('createSession tests', () => {
   test('createSession correctly calls dependencies and returns result', () => {
-    const body = {
-      signature: 'mockSignature',
+    const req = {
+      body: {
+        signature: 'mockSignature',
+      },
     };
 
     const res = {
@@ -56,7 +58,7 @@ describe('createSession tests', () => {
 
     hasAccess.mockReturnValueOnce(true);
 
-    const result = createSession(body, res);
+    const result = createSession(req, res);
 
     expect(res.cookie).toHaveBeenCalledWith(
       'user-signature',
@@ -69,8 +71,10 @@ describe('createSession tests', () => {
   });
 
   test('createSession throws when hasAccess returns false', async () => {
-    const body = {
-      signature: 'mockSignature',
+    const req = {
+      body: {
+        signature: 'mockSignature',
+      },
     };
 
     const res = {
@@ -80,7 +84,7 @@ describe('createSession tests', () => {
     hasAccess.mockReturnValueOnce(false);
 
     try {
-      await createSession(body, res);
+      await createSession(req, res);
       expect(true).toBe(false);
     } catch (error) {
       expect(error.message).toStrictEqual('Your Eth account does not have access');
