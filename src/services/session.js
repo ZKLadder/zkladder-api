@@ -10,7 +10,8 @@ const getSession = (req) => {
   return { session: true };
 };
 
-const createSession = (body, res) => {
+const createSession = (req, res) => {
+  const { body, hostname } = req;
   const { signature } = body;
   if (!hasAccess(signature)) throw new ClientError('Your Eth account does not have access');
 
@@ -18,6 +19,7 @@ const createSession = (body, res) => {
     'user-signature',
     signature,
     {
+      domain: hostname === 'localhost' ? 'localhost' : 'zkladder.com',
       httpOnly: true,
       encode: (cookie) => cookie,
     },

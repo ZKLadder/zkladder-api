@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    createSession(req.body, res);
+    createSession(req, res);
     res.send({ success: true });
   } catch (error) {
     next(error);
