@@ -19,7 +19,7 @@ const createSession = (req, res) => {
     'user-signature',
     signature,
     {
-      domain: hostname === 'localhost' ? 'localhost' : 'zkladder.com',
+      domain: hostname === 'localhost' ? 'localhost' : '.zkladder.com',
       httpOnly: true,
       encode: (cookie) => cookie,
       sameSite: hostname === 'localhost' ? undefined : 'None',
