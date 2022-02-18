@@ -22,6 +22,8 @@ const createSession = (req, res) => {
       domain: hostname === 'localhost' ? 'localhost' : 'zkladder.com',
       httpOnly: true,
       encode: (cookie) => cookie,
+      sameSite: hostname === 'localhost' ? undefined : 'None',
+      secure: hostname === 'localhost' ? undefined : true,
     },
   );
 };
