@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/', async (req, res, next) => {
   try {
-    const response = getSession(req);
+    const response = await getSession(req);
     res.send(response);
   } catch (error) {
     next(error);
@@ -14,8 +14,8 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    createSession(req, res);
-    res.send({ success: true });
+    const response = await createSession(req, res);
+    res.send(response);
   } catch (error) {
     next(error);
   }

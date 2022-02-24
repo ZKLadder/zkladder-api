@@ -1,7 +1,13 @@
 /* eslint-disable no-underscore-dangle */
+
 const sigUtil = require('@metamask/eth-sig-util');
+const ethers = require('ethers');
+const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
+const getNetworkById = require('./getNetworkById');
 const { getTransactionSigner } = require('../services/accounts');
-const { whiteList } = require('../config');
+const { zkl, ipfs, whiteList } = require('../config');
+
+let zklMemberNft;
 
 /**
  * Returns a signed mint voucher used to mint new tokens on any ZKL whitelisted NFT deployment
@@ -54,7 +60,7 @@ const nftWhitelistedVoucher = async (options) => {
  * @param {*} signature A b64 string encoding JSON content and a signed digest seperatd by an '_'
  * @returns boolean indiciating if signer has access
  */
-const hasAccess = (signature) => {
+const hasAccess = async (signature) => {
   const decodedSignature = Buffer.from(signature, 'base64').toString('ascii').split('_');
   const content = JSON.parse(decodedSignature[0]);
   const digest = decodedSignature[1];
@@ -65,16 +71,36 @@ const hasAccess = (signature) => {
     version: 'V4',
   });
 
-  // @TODO Check member token contract for ownership
-  if (!whiteList.includes(verifiedAddress.toLowerCase())) return false;
+  if (!zklMemberNft) {
+    const { RPCEndpoint, name, chainId } = getNetworkById(zkl.memberNftChainId);
+    const provider = new ethers.providers.StaticJsonRpcProvider(RPCEndpoint, { name, chainId });
+    zklMemberNft = await MemberNft.setup({
+      provider,
+      address: zkl.memberNft,
+      infuraIpfsProjectId: ipfs.projectId,
+      infuraIpfsProjectSecret: ipfs.projectSecret,
+    });
+  }
+
+  const totalSupply = await zklMemberNft.totalSupply();
+  const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
+
+  if (tokens.length < 1
+     && !whiteList.includes(verifiedAddress.toLowerCase())) return { session: false };
 
   // Signature has expired (issued over 48 hours in the past)
-  if (Date.now() > (content.message.timestamp + 172800000)) return false;
+  if (Date.now() > (content.message.timestamp + 172800000)) return { session: false };
 
   // Signature issued in the future
-  if (Date.now() < content.message.timestamp) return false;
+  if (Date.now() < content.message.timestamp) return { session: false };
 
-  return true;
+  return {
+    session: true,
+    memberToken: {
+      totalSupply,
+      ...tokens[0],
+    },
+  };
 };
 
 module.exports = { nftWhitelistedVoucher, hasAccess };

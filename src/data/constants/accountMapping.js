@@ -25,8 +25,14 @@ module.exports = {
   ],
   31337: [
     {
-      account: accounts.hardhat,
+      account: '0x4a26262236378f0aff37edf6ab7b3ba7452782af',
       privateKey: keys.hardhat,
+    },
+  ],
+  137: [
+    {
+      account: '0x4a26262236378f0aff37edf6ab7b3ba7452782af',
+      privateKey: keys.rinkeby,
     },
   ],
 };

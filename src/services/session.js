@@ -1,19 +1,22 @@
 const { hasAccess } = require('../utils/signatures');
 const { ClientError } = require('../utils/error');
 
-const getSession = (req) => {
+const getSession = async (req) => {
   const signature = req.cookies?.['user-signature'] || req.headers['x-user-signature'];
 
   if (!signature) return { session: false };
-  if (!hasAccess(signature)) return { session: false };
 
-  return { session: true };
+  const session = await hasAccess(signature);
+
+  return session;
 };
 
-const createSession = (req, res) => {
+const createSession = async (req, res) => {
   const { body, hostname } = req;
   const { signature } = body;
-  if (!hasAccess(signature)) throw new ClientError('Your Eth account does not have access');
+  const { session, memberToken } = await hasAccess(signature);
+
+  if (!session) throw new ClientError('Your Eth account does not have access');
 
   res.cookie(
     'user-signature',
@@ -26,6 +29,8 @@ const createSession = (req, res) => {
       secure: hostname === 'localhost' ? undefined : true,
     },
   );
+
+  return { session, memberToken };
 };
 
 const deleteSession = (res) => {

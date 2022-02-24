@@ -16,8 +16,11 @@ const { getAccountByNetworkId, getTransactionSigner } = require('./accounts');
  */
 const storeVoucher = async (options) => {
   const {
-    contractAddress, userAddress, balance, signedVoucher,
+    balance, signedVoucher,
   } = options;
+
+  const contractAddress = options.contractAddress.toLowerCase();
+  const userAddress = options.userAddress.toLowerCase();
 
   const exists = await voucherModel.findOne({
     where: { contractAddress, userAddress, balance },
@@ -61,7 +64,8 @@ const deleteVoucher = async (options) => {
  * Gets all of {userAddress} vouchers for {contractAddress}
  */
 const getAllVouchers = async (options) => {
-  const { userAddress, contractAddress } = options;
+  const contractAddress = options.contractAddress.toLowerCase();
+  const userAddress = options.userAddress.toLowerCase();
 
   const vouchers = await voucherModel.findAll({
     where: {
