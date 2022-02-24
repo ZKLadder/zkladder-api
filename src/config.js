@@ -28,4 +28,12 @@ module.exports = {
   whiteList: (process.env.ACCESS_WHITELIST?.split(',') || whiteList).map(
     (address) => (address.toLowerCase()),
   ),
+  zkl: {
+    memberNft: process.env.ZKL_MEMBER_NFT || '0x5fbdb2315678afecb367f032d93f642f64180aa3',
+    memberNftChainId: process.env.ZKL_NFT_CHAINID || '31337',
+  },
+  ipfs: {
+    projectId: process.env.INFURA_IPFS_ID,
+    projectSecret: process.env.INFURA_IPFS_SECRET,
+  },
 };
