@@ -14,6 +14,14 @@ jobs: # each workflow consists of 1+ jobs; by default, all jobs run in parallel
         with:
           node-version: '14.x'
 
+      - name: Set NPM Registry
+        run: npm set registry https://npm.pkg.github.com/zkladder
+
+      - name: Inject Personal Access Token
+        env:
+          ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: npm set //npm.pkg.github.com/:_authToken $ACCESS_TOKEN
+
       - name: Cache NPM # leverage npm cache on repeated workflow runs if package.json didn't change
         uses: actions/cache@v1
         with:
@@ -39,6 +47,14 @@ jobs: # each workflow consists of 1+ jobs; by default, all jobs run in parallel
         with:
           node-version: '14.x'
 
+      - name: Set NPM Registry
+        run: npm set registry https://npm.pkg.github.com/zkladder
+
+      - name: Inject Personal Access Token
+        env:
+          ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: npm set //npm.pkg.github.com/:_authToken $ACCESS_TOKEN
+
       - name: Cache NPM
         uses: actions/cache@v1
         with:
@@ -63,6 +79,14 @@ jobs: # each workflow consists of 1+ jobs; by default, all jobs run in parallel
         uses: actions/setup-node@v1
         with:
           node-version: '14.x'
+      
+      - name: Set NPM Registry
+        run: npm set registry https://npm.pkg.github.com/zkladder
+
+      - name: Inject Personal Access Token
+        env:
+          ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: npm set //npm.pkg.github.com/:_authToken $ACCESS_TOKEN
 
       - name: Cache NPM
         uses: actions/cache@v1
