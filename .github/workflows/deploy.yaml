@@ -12,6 +12,12 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v2
 
+    - name: Configure .npmrc
+      uses: ferluisxd/create-npmrc@3
+      with:
+        org_name: zkladder
+        auth_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
     - name: Generate deployment package
       run: zip -r deploy.zip . -x '*.git*'
 
