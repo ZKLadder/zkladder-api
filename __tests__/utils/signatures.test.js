@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const sigUtil = require('@metamask/eth-sig-util');
+const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const { nftWhitelistedVoucher, hasAccess } = require('../../src/utils/signatures');
 const { getTransactionSigner } = require('../../src/services/accounts');
 
@@ -24,6 +25,12 @@ jest.mock('@metamask/eth-sig-util', () => ({
 
 jest.mock('../../src/services/accounts', () => ({
   getTransactionSigner: jest.fn(),
+}));
+
+jest.mock('@zkladder/zkladder-sdk-ts', () => ({
+  MemberNft: {
+    setup: jest.fn(),
+  },
 }));
 
 describe('signTypedData for whiteListed NFT tests', () => {
@@ -122,7 +129,14 @@ describe('signTypedData for whiteListed NFT tests', () => {
 });
 
 describe('hasAccess', () => {
-  test('Correctly calls dependencies and returns true when signature is valid', () => {
+  const totalSupply = jest.fn();
+  const getAllTokensOwnedBy = jest.fn();
+  MemberNft.setup.mockResolvedValue({
+    totalSupply,
+    getAllTokensOwnedBy,
+  });
+
+  test('Correctly calls dependencies and returns true when signature is valid', async () => {
     const content = {
       message: {
         timestamp: 100,
@@ -134,7 +148,13 @@ describe('hasAccess', () => {
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
     mockDate.mockReturnValue(101);
 
-    const result = hasAccess('mockSignature');
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
+
+    expect(totalSupply).toHaveBeenCalledTimes(1);
+    expect(getAllTokensOwnedBy).toHaveBeenCalledWith('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -142,10 +162,10 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toBe(true);
+    expect(result).toStrictEqual({ session: true, memberToken: { mock: 'token', totalSupply: 10 } });
   });
 
-  test('Returns false when address is not whitelisted', () => {
+  test('Returns false when address does not hold any tokens', async () => {
     const content = {
       message: {
         timestamp: 100,
@@ -156,7 +176,10 @@ describe('hasAccess', () => {
 
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xmockAddress');
 
-    const result = hasAccess('mockSignature');
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -164,10 +187,10 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toBe(false);
+    expect(result).toStrictEqual({ session: false });
   });
 
-  test('Returns false when timestamp is over 48 hours old', () => {
+  test('Returns false when timestamp is over 48 hours old', async () => {
     const content = {
       message: {
         timestamp: 100,
@@ -180,7 +203,10 @@ describe('hasAccess', () => {
 
     mockDate.mockReturnValue(172899000);
 
-    const result = hasAccess('mockSignature');
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -188,10 +214,10 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toBe(false);
+    expect(result).toStrictEqual({ session: false });
   });
 
-  test('Returns false when timestamp issued in the future', () => {
+  test('Returns false when timestamp issued in the future', async () => {
     const content = {
       message: {
         timestamp: 101,
@@ -204,7 +230,10 @@ describe('hasAccess', () => {
 
     mockDate.mockReturnValue(100);
 
-    const result = hasAccess('mockSignature');
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -212,6 +241,31 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toBe(false);
+    expect(result).toStrictEqual({ session: false });
+  });
+
+  test('Returns true when address does not hold any tokens but is dev whitelisted', async () => {
+    const content = {
+      message: {
+        timestamp: 100,
+      },
+    };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(content)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([]);
+
+    const result = await hasAccess('mockSignature');
+
+    expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
+      data: content,
+      signature: '0x123456789',
+      version: 'V4',
+    });
+
+    expect(result).toStrictEqual({ session: true, memberToken: { totalSupply: 10 } });
   });
 });

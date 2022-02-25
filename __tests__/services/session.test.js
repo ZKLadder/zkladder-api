@@ -6,38 +6,38 @@ jest.mock('../../src/utils/signatures', () => ({
 }));
 
 describe('getSession tests', () => {
-  test('getSession correctly calls dependencies and returns result', () => {
+  test('getSession correctly calls dependencies and returns result', async () => {
     const mockReq = {
       cookies: {
         'user-signature': 'mockSignature',
       },
     };
 
-    hasAccess.mockReturnValueOnce(true);
+    hasAccess.mockResolvedValueOnce({ session: true });
 
-    const result = getSession(mockReq);
+    const result = await getSession(mockReq);
 
     expect(hasAccess).toHaveBeenCalledWith('mockSignature');
     expect(result).toStrictEqual({ session: true });
   });
 
-  test('getSession returns false when signature is not set', () => {
-    const result = getSession({ cookies: {}, headers: {} });
+  test('getSession returns false when signature is not set', async () => {
+    const result = await getSession({ cookies: {}, headers: {} });
 
     expect(hasAccess).toHaveBeenCalledTimes(0);
     expect(result).toStrictEqual({ session: false });
   });
 
-  test('getSession returns false when hasAccess returns false', () => {
+  test('getSession returns false when hasAccess returns false', async () => {
     const mockReq = {
       cookies: {
         'user-signature': 'mockSignature',
       },
     };
 
-    hasAccess.mockReturnValueOnce(false);
+    hasAccess.mockResolvedValueOnce({ session: false });
 
-    const result = getSession(mockReq);
+    const result = await getSession(mockReq);
 
     expect(hasAccess).toHaveBeenCalledWith('mockSignature');
     expect(result).toStrictEqual({ session: false });
@@ -45,7 +45,7 @@ describe('getSession tests', () => {
 });
 
 describe('createSession tests', () => {
-  test('createSession correctly calls dependencies and returns result', () => {
+  test('createSession correctly calls dependencies and returns result', async () => {
     const req = {
       body: {
         signature: 'mockSignature',
@@ -56,9 +56,9 @@ describe('createSession tests', () => {
       cookie: jest.fn(),
     };
 
-    hasAccess.mockReturnValueOnce(true);
+    hasAccess.mockResolvedValueOnce({ session: true, memberToken: 'mock' });
 
-    const result = createSession(req, res);
+    const result = await createSession(req, res);
 
     expect(res.cookie).toHaveBeenCalledWith(
       'user-signature',
@@ -67,7 +67,7 @@ describe('createSession tests', () => {
         httpOnly: true,
       }),
     );
-    expect(result).toBe(undefined);
+    expect(result).toStrictEqual({ session: true, memberToken: 'mock' });
   });
 
   test('createSession throws when hasAccess returns false', async () => {
@@ -81,7 +81,7 @@ describe('createSession tests', () => {
       cookie: jest.fn(),
     };
 
-    hasAccess.mockReturnValueOnce(false);
+    hasAccess.mockResolvedValueOnce({ session: false });
 
     try {
       await createSession(req, res);

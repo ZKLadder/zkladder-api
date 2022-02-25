@@ -57,13 +57,15 @@ describe('storeVoucher service', () => {
 
     expect(mockVoucherModel.findOne).toHaveBeenCalledWith({
       where: {
-        contractAddress, userAddress, balance,
+        contractAddress: '0xmockcontract',
+        userAddress: '0xmockuser',
+        balance,
       },
     });
 
     expect(mockVoucherModel.create).toHaveBeenCalledWith({
-      contractAddress,
-      userAddress,
+      contractAddress: '0xmockcontract',
+      userAddress: '0xmockuser',
       balance,
       signedVoucher,
     });
@@ -152,8 +154,8 @@ describe('getAllVouchers function', () => {
 
     expect(mockVoucherModel.findAll).toHaveBeenCalledWith({
       where: {
-        userAddress,
-        contractAddress,
+        userAddress: '0xmockuser',
+        contractAddress: '0xmockcontract',
       },
       raw: true,
     });
@@ -179,8 +181,8 @@ describe('getVoucher function', () => {
 
     expect(mockVoucherModel.findAll).toHaveBeenCalledWith({
       where: {
-        userAddress,
-        contractAddress,
+        userAddress: '0xmockuser',
+        contractAddress: '0xmockcontract',
       },
       raw: true,
     });
@@ -210,8 +212,8 @@ describe('getVoucher function', () => {
     const result = await getVoucher({ contractAddress, userAddress, chainId });
 
     expect(result).toStrictEqual({
-      contractAddress,
-      userAddress,
+      contractAddress: '0xmockContract',
+      userAddress: '0xmockUser',
       balance: 112,
       signedVoucher: { mock: 'Voucher' },
     });
