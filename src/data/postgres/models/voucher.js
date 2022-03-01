@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../index');
 const { validateAddress } = require('../../../utils/validators');
+const getNetworkById = require('../../../utils/getNetworkById');
 
 const Voucher = sequelize.define('voucher', {
   balance: { // Same as balance field of signedVoucher
@@ -26,6 +27,16 @@ const Voucher = sequelize.define('voucher', {
     validate: {
       isEthAddress: (value) => {
         if (!validateAddress(value)) throw new Error('userAddress is not a valid address');
+        return value;
+      },
+    },
+  },
+  chainId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      isSupportedNetwork: (value) => {
+        getNetworkById(value);
         return value;
       },
     },
