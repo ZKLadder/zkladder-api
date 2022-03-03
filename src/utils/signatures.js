@@ -63,6 +63,9 @@ const hasAccess = async (signature) => {
   const content = JSON.parse(decodedSignature[0]);
   const digest = decodedSignature[1];
 
+  console.log('content', content);
+  console.log('digest', digest);
+
   const verifiedAddress = sigUtil.recoverTypedSignature({
     data: content,
     signature: digest,
