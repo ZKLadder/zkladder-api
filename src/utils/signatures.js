@@ -97,6 +97,8 @@ const hasAccess = async (signature) => {
   if (Date.now() > (content.message.timestamp + 172800000)) return { session: false };
   console.log('passed 2');
   // Signature issued in the future
+  console.log('date-now', Date.now());
+  console.log('timestamp', content.message.timestamp);
   if (Date.now() < content.message.timestamp) return { session: false };
   console.log('passed 3');
   return {
