@@ -16,14 +16,16 @@ const { getAccountByNetworkId, getTransactionSigner } = require('./accounts');
  */
 const storeVoucher = async (options) => {
   const {
-    balance, signedVoucher,
+    balance, signedVoucher, chainId,
   } = options;
 
   const contractAddress = options.contractAddress.toLowerCase();
   const userAddress = options.userAddress.toLowerCase();
 
   const exists = await voucherModel.findOne({
-    where: { contractAddress, userAddress, balance },
+    where: {
+      contractAddress, userAddress, balance, chainId,
+    },
   });
 
   if (exists) throw new ClientError('This voucher already exists');
@@ -31,7 +33,7 @@ const storeVoucher = async (options) => {
   // @TODO validate voucher before storing - i.e signer is MINTER
 
   const newVoucher = await voucherModel.create({
-    contractAddress, userAddress, balance, signedVoucher,
+    contractAddress, userAddress, balance, signedVoucher, chainId,
   });
 
   return newVoucher;
@@ -42,7 +44,7 @@ const storeVoucher = async (options) => {
  */
 const deleteVoucher = async (options) => {
   const {
-    id, contractAddress, userAddress, balance,
+    id, contractAddress, userAddress, balance, chainId,
   } = options;
 
   if (id) {
@@ -50,9 +52,11 @@ const deleteVoucher = async (options) => {
     return { success: true };
   }
 
-  if (contractAddress && userAddress && balance) {
+  if (contractAddress && userAddress && balance && chainId) {
     await voucherModel.destroy({
-      where: { contractAddress, userAddress, balance },
+      where: {
+        contractAddress, userAddress, balance, chainId,
+      },
     });
     return { success: true };
   }
@@ -66,11 +70,13 @@ const deleteVoucher = async (options) => {
 const getAllVouchers = async (options) => {
   const contractAddress = options.contractAddress.toLowerCase();
   const userAddress = options.userAddress.toLowerCase();
+  const { chainId } = options;
 
   const vouchers = await voucherModel.findAll({
     where: {
       userAddress,
       contractAddress,
+      chainId,
     },
     raw: true,
   });
@@ -91,7 +97,7 @@ const getVoucher = async (options) => {
 
   const { userAddress, contractAddress, chainId } = options;
 
-  const vouchers = await getAllVouchers({ userAddress, contractAddress });
+  const vouchers = await getAllVouchers({ userAddress, contractAddress, chainId });
 
   if (vouchers.length > 0) {
     // Return the voucher with the highest balance field if it exists

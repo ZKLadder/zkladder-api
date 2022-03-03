@@ -46,12 +46,14 @@ describe('storeVoucher service', () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const chainId = '123';
     const signedVoucher = 'MOCKJSON';
 
     await storeVoucher({
       contractAddress,
       userAddress,
       balance,
+      chainId,
       signedVoucher,
     });
 
@@ -60,6 +62,7 @@ describe('storeVoucher service', () => {
         contractAddress: '0xmockcontract',
         userAddress: '0xmockuser',
         balance,
+        chainId,
       },
     });
 
@@ -67,6 +70,7 @@ describe('storeVoucher service', () => {
       contractAddress: '0xmockcontract',
       userAddress: '0xmockuser',
       balance,
+      chainId,
       signedVoucher,
     });
   });
@@ -75,6 +79,7 @@ describe('storeVoucher service', () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const chainId = '123';
 
     mockVoucherModel.findOne.mockResolvedValueOnce({ exists: true });
 
@@ -82,6 +87,7 @@ describe('storeVoucher service', () => {
       contractAddress,
       userAddress,
       balance,
+      chainId,
     })).rejects.toEqual(new ClientError('This voucher already exists'));
   });
 
@@ -89,6 +95,7 @@ describe('storeVoucher service', () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const chainId = '123';
     const signedVoucher = 'MOCKJSON';
 
     mockVoucherModel.create.mockResolvedValueOnce({ mock: 'voucher' });
@@ -97,6 +104,7 @@ describe('storeVoucher service', () => {
       contractAddress,
       userAddress,
       balance,
+      chainId,
       signedVoucher,
     });
 
@@ -123,12 +131,15 @@ describe('deleteVoucher service', () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const balance = 1;
+    const chainId = '123';
 
-    const result = await deleteVoucher({ contractAddress, userAddress, balance });
+    const result = await deleteVoucher({
+      contractAddress, userAddress, balance, chainId,
+    });
 
     expect(mockVoucherModel.destroy).toHaveBeenCalledWith({
       where: {
-        contractAddress, userAddress, balance,
+        contractAddress, userAddress, balance, chainId,
       },
     });
 
@@ -145,17 +156,19 @@ describe('getAllVouchers function', () => {
   test('Calls dependencies correctly and returns response', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
+    const chainId = '123';
 
     mockVoucherModel.findAll.mockResolvedValueOnce({
       mock: 'response',
     });
 
-    const result = await getAllVouchers({ contractAddress, userAddress });
+    const result = await getAllVouchers({ contractAddress, userAddress, chainId });
 
     expect(mockVoucherModel.findAll).toHaveBeenCalledWith({
       where: {
         userAddress: '0xmockuser',
         contractAddress: '0xmockcontract',
+        chainId,
       },
       raw: true,
     });

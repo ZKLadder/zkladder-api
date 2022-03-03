@@ -16,19 +16,20 @@ const createSession = async (req, res) => {
   const { signature } = body;
   const { session, memberToken } = await hasAccess(signature);
 
-  if (!session) throw new ClientError('Your Eth account does not have access');
-
   res.cookie(
     'user-signature',
     signature,
     {
       domain: hostname === 'localhost' ? 'localhost' : '.zkladder.com',
       httpOnly: true,
+      expires: new Date(Date.now() + 172800000),
       encode: (cookie) => cookie,
       sameSite: hostname === 'localhost' ? undefined : 'None',
       secure: hostname === 'localhost' ? undefined : true,
     },
   );
+
+  if (!session) throw new ClientError('Your Eth account does not have access');
 
   return { session, memberToken };
 };

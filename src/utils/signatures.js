@@ -1,9 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 
 const sigUtil = require('@metamask/eth-sig-util');
-const ethers = require('ethers');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
-const getNetworkById = require('./getNetworkById');
 const { getTransactionSigner } = require('../services/accounts');
 const { zkl, ipfs, whiteList } = require('../config');
 
@@ -72,10 +70,9 @@ const hasAccess = async (signature) => {
   });
 
   if (!zklMemberNft) {
-    const { RPCEndpoint, name, chainId } = getNetworkById(zkl.memberNftChainId);
-    const provider = new ethers.providers.StaticJsonRpcProvider(RPCEndpoint, { name, chainId });
+    const ethersSigner = getTransactionSigner(zkl.memberNftChainId);
     zklMemberNft = await MemberNft.setup({
-      provider,
+      provider: ethersSigner,
       address: zkl.memberNft,
       infuraIpfsProjectId: ipfs.projectId,
       infuraIpfsProjectSecret: ipfs.projectSecret,
