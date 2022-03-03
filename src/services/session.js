@@ -14,8 +14,11 @@ const getSession = async (req) => {
 const createSession = async (req, res) => {
   const { body, hostname } = req;
   const { signature } = body;
+  console.log('body', body);
+  console.log('hostname', hostname);
+  console.log('sig', signature);
   const { session, memberToken } = await hasAccess(signature);
-
+  console.log('session', session, memberToken);
   res.cookie(
     'user-signature',
     signature,

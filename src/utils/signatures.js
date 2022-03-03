@@ -69,6 +69,8 @@ const hasAccess = async (signature) => {
     version: 'V4',
   });
 
+  console.log('address', verifiedAddress);
+
   if (!zklMemberNft) {
     const ethersSigner = getTransactionSigner(zkl.memberNftChainId);
     zklMemberNft = await MemberNft.setup({
@@ -82,15 +84,18 @@ const hasAccess = async (signature) => {
   const totalSupply = await zklMemberNft.totalSupply();
   const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
 
+  console.log('supply', totalSupply);
+  console.log('tokens', tokens);
+
   if (tokens.length < 1
      && !whiteList.includes(verifiedAddress.toLowerCase())) return { session: false };
-
+  console.log('passed 1');
   // Signature has expired (issued over 48 hours in the past)
   if (Date.now() > (content.message.timestamp + 172800000)) return { session: false };
-
+  console.log('passed 2');
   // Signature issued in the future
   if (Date.now() < content.message.timestamp) return { session: false };
-
+  console.log('passed 3');
   return {
     session: true,
     memberToken: {
