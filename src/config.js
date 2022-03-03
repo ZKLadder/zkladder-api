@@ -29,8 +29,8 @@ module.exports = {
     (address) => (address.toLowerCase()),
   ),
   zkl: {
-    memberNft: process.env.ZKL_MEMBER_NFT || '0xa2667DEe29136B840E19CF1198eF1e9a0A609EB0',
-    memberNftChainId: process.env.ZKL_NFT_CHAINID || '4',
+    memberNft: process.env.ZKL_MEMBER_NFT || '0xaa331b70845b11f1afb0a566c566a2a16018558a',
+    memberNftChainId: process.env.ZKL_NFT_CHAINID || '137',
   },
   ipfs: {
     projectId: process.env.INFURA_IPFS_ID,
