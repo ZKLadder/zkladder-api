@@ -4,6 +4,7 @@ const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const { getTransactionSigner } = require('../services/accounts');
 const { zkl, ipfs, whiteList } = require('../config');
+const { ethToWei } = require('./conversions');
 
 let zklMemberNft;
 
@@ -20,6 +21,7 @@ const nftWhitelistedVoucher = async (options) => {
     contractAddress,
     wallet,
     balance,
+    salePrice,
     minter,
   } = options;
 
@@ -35,13 +37,17 @@ const nftWhitelistedVoucher = async (options) => {
   const types = {
     mintVoucher: [
       { name: 'balance', type: 'uint256' },
+      { name: 'salePrice', type: 'uint256' },
       { name: 'minter', type: 'address' },
     ],
   };
 
+  const salePriceInWei = ethToWei(salePrice);
+
   const value = {
     balance,
     minter,
+    salePrice: salePriceInWei,
   };
 
   const signature = await signer._signTypedData(domain, types, value);
@@ -49,6 +55,7 @@ const nftWhitelistedVoucher = async (options) => {
   return {
     balance,
     minter,
+    salePrice: salePriceInWei,
     signature,
   };
 };

@@ -20,31 +20,26 @@ describe('ERC721_Whitelisted', () => {
   it('Correctly deploys with constructor params', async () => {
     expect(await ERC721Whitelisted.name()).to.equal('MockNFT');
     expect(await ERC721Whitelisted.symbol()).to.equal('MNFT');
-    expect(await ERC721Whitelisted.baseUri()).to.equal('ipfs://mock12345');
+    expect(await ERC721Whitelisted.collectionDataUri()).to.equal('ipfs://mock12345');
     expect((await ERC721Whitelisted.beneficiaryAddress())
       .toLowerCase())
       .to.equal('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'.toLowerCase());
-    expect(await ERC721Whitelisted.salePrice()).to.deep.equal(BigNumber.from(0));
   });
 
-  it('Correctly sets salePrice', async () => {
-    const pow18 = BigNumber.from(10).mul(18);
-
-    const tx = await ERC721Whitelisted.setSalePrice(BigNumber.from(3).mul(pow18));
+  it('Correctly sets collectionDataUri', async () => {
+    const tx = await ERC721Whitelisted.setCollectionDataUri('mockSetUri');
     await tx.wait();
 
-    expect(await ERC721Whitelisted.salePrice()).to.deep.equal(BigNumber.from(3).mul(pow18));
+    expect(await ERC721Whitelisted.collectionDataUri()).to.deep.equal('mockSetUri');
   });
 
-  it('Throws when a non-admin calls setSalePrice', async () => {
+  it('Throws when a non-admin calls setCollectionDataUri', async () => {
     const signers = await ethers.getSigners();
 
     const nonAdmin = ERC721Whitelisted.connect(signers[1]);
 
-    const pow18 = BigNumber.from(10).mul(18);
-
     try {
-      const tx = await nonAdmin.setSalePrice(BigNumber.from(3).mul(pow18));
+      const tx = await nonAdmin.setCollectionDataUri('mockSetUri');
       await tx.wait();
       expect(true).to.equal(false);
     } catch (error) {
@@ -231,6 +226,7 @@ describe('ERC721_Whitelisted', () => {
       const mintMalformedStructTx = await nonAdmin.mint({
         balance: 1,
         minter: signers[1].address,
+        salePrice: 0,
         signature: utils.toUtf8Bytes('0xmockSigntatureData'),
       }, 'https://mockToken.com');
 
@@ -247,6 +243,7 @@ describe('ERC721_Whitelisted', () => {
         contractAddress: nonAdmin.address,
         wallet: signers[1],
         balance: 1,
+        salePrice: 0,
         minter: signers[1].address,
       });
       const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
@@ -263,12 +260,30 @@ describe('ERC721_Whitelisted', () => {
         contractAddress: nonAdmin.address,
         wallet: signers[0],
         balance: 0,
+        salePrice: 0,
         minter: signers[1].address,
       });
       const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
       await invalidSigTx.wait();
     } catch (error) {
       expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'You are not authorized to mint any more tokens\'');
+    }
+
+    // Not sending enough crypto
+    try {
+      const signature = await nftWhitelistedVoucher({
+        chainId: 31337,
+        contractName: 'MockNFT',
+        contractAddress: nonAdmin.address,
+        wallet: signers[0],
+        balance: 1,
+        salePrice: 0.5,
+        minter: signers[1].address,
+      });
+      const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com', { value: BigNumber.from('50000000000000000') });
+      await invalidSigTx.wait();
+    } catch (error) {
+      expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'Insufficient ETH sent with transaction\'');
     }
   });
 
@@ -283,9 +298,11 @@ describe('ERC721_Whitelisted', () => {
       contractAddress: nonAdmin.address,
       wallet: signers[0],
       balance: 1,
+      salePrice: 0.005,
       minter: signers[1].address,
     });
-    const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com');
+
+    const invalidSigTx = await nonAdmin.mint(signature, 'https://mockToken.com', { value: BigNumber.from('50000000000000000') });
     await invalidSigTx.wait();
 
     expect(await ERC721Whitelisted.totalSupply()).to.deep.equal(BigNumber.from(1));

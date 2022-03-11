@@ -3,6 +3,7 @@ const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const { nftWhitelistedVoucher, hasAccess } = require('../../src/utils/signatures');
 const { getTransactionSigner } = require('../../src/services/accounts');
+const { ethToWei } = require('../../src/utils/conversions');
 
 const mockBuffer = jest.fn();
 const mockDate = jest.fn();
@@ -27,6 +28,10 @@ jest.mock('../../src/services/accounts', () => ({
   getTransactionSigner: jest.fn(),
 }));
 
+jest.mock('../../src/utils/conversions', () => ({
+  ethToWei: jest.fn(() => ('mockBigNumber')),
+}));
+
 jest.mock('@zkladder/zkladder-sdk-ts', () => ({
   MemberNft: {
     setup: jest.fn(),
@@ -45,10 +50,12 @@ describe('signTypedData for whiteListed NFT tests', () => {
       contractName: 'mockContract',
       contractAddress: '0x123456789',
       balance: 1,
+      salePrice: 125,
       minter: '0x987654321',
     });
 
     expect(getTransactionSigner).toHaveBeenCalledWith(123);
+    expect(ethToWei).toHaveBeenCalledWith(125);
 
     expect(mockSignTypedData).toHaveBeenCalledWith(
       {
@@ -60,12 +67,14 @@ describe('signTypedData for whiteListed NFT tests', () => {
       {
         mintVoucher: [
           { name: 'balance', type: 'uint256' },
+          { name: 'salePrice', type: 'uint256' },
           { name: 'minter', type: 'address' },
         ],
       },
       {
         balance: 1,
         minter: '0x987654321',
+        salePrice: 'mockBigNumber',
       },
     );
   });
@@ -81,10 +90,12 @@ describe('signTypedData for whiteListed NFT tests', () => {
       contractAddress: '0x123456789',
       wallet: mockWallet,
       balance: 1,
+      salePrice: 125,
       minter: '0x987654321',
     });
 
     expect(getTransactionSigner).not.toHaveBeenCalled();
+    expect(ethToWei).toHaveBeenCalledWith(125);
 
     expect(mockWallet._signTypedData).toHaveBeenCalledWith(
       {
@@ -96,12 +107,14 @@ describe('signTypedData for whiteListed NFT tests', () => {
       {
         mintVoucher: [
           { name: 'balance', type: 'uint256' },
+          { name: 'salePrice', type: 'uint256' },
           { name: 'minter', type: 'address' },
         ],
       },
       {
         balance: 1,
         minter: '0x987654321',
+        salePrice: 'mockBigNumber',
       },
     );
   });
@@ -123,6 +136,7 @@ describe('signTypedData for whiteListed NFT tests', () => {
     expect(result).toStrictEqual({
       balance: 1,
       minter: '0x987654321',
+      salePrice: 'mockBigNumber',
       signature: '0xmockSignature',
     });
   });
