@@ -11,6 +11,10 @@ const Voucher = sequelize.define('voucher', {
       min: 0,
     },
   },
+  roleId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   contractAddress: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -46,7 +50,7 @@ const Voucher = sequelize.define('voucher', {
     allowNull: false,
     validate: {
       isValidVoucher: (value) => {
-        if (value.balance && value.minter && value.signature) return value;
+        if (value.balance && value.minter && value.salePrice && value.signature) return value;
         throw new Error('signedVoucher is not formatted correctly');
       },
     },

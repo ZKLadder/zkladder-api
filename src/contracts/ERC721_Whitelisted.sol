@@ -19,13 +19,11 @@ contract ERC721_Whitelisted is
     AccessControlEnumerable,
     EIP712
 {
-    string public baseUri;
+    // Resolves to JSON blob of collection level metadata
+    string public collectionDataUri;
 
     // Recieves proceeds from new mints
     address payable public beneficiaryAddress;
-
-    // Current mint price in WEI
-    uint256 public salePrice;
 
     // Can NFT's be transferred
     bool public isTransferrable = true;
@@ -42,6 +40,7 @@ contract ERC721_Whitelisted is
         // Minter's allowed balance after mint has occured.
         // Ie. if the voucher is valid for a single token, balance = balanceOf(minter)+1
         uint256 balance;
+        uint256 salePrice; //In WEI
         address minter;
         bytes signature;
     }
@@ -49,10 +48,10 @@ contract ERC721_Whitelisted is
     constructor(
         string memory name,
         string memory symbol,
-        string memory _baseUri,
+        string memory _collectionDataUri,
         address payable beneficiary
     ) ERC721(name, symbol) EIP712(name, "1") {
-        baseUri = _baseUri;
+        collectionDataUri = _collectionDataUri;
         beneficiaryAddress = beneficiary;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
@@ -121,7 +120,7 @@ contract ERC721_Whitelisted is
         payable
     {
         require(
-            msg.value >= salePrice,
+            msg.value >= voucher.salePrice,
             "Insufficient ETH sent with transaction"
         );
 
@@ -166,14 +165,14 @@ contract ERC721_Whitelisted is
     }
 
     /**
-      @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the NFT sale price
-      @param newPrice The price now required to mint new tokens in WEI
+      @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the NFT collection's metadata uri
+      @param newCollectionDataUri New collectionDataUri string
      */
-    function setSalePrice(uint256 newPrice)
+    function setCollectionDataUri(string memory newCollectionDataUri)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        salePrice = newPrice;
+        collectionDataUri = newCollectionDataUri;
     }
 
     /**
@@ -231,9 +230,10 @@ contract ERC721_Whitelisted is
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "mintVoucher(uint256 balance,address minter)"
+                            "mintVoucher(uint256 balance,uint256 salePrice,address minter)"
                         ),
                         voucher.balance,
+                        voucher.salePrice,
                         voucher.minter
                     )
                 )

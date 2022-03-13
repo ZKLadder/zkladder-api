@@ -1,9 +1,9 @@
-const ethers = require('ethers');
+const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const voucherModel = require('../data/postgres/models/voucher');
-const { generateContractABI } = require('./compile');
 const { ClientError } = require('../utils/error');
 const { nftWhitelistedVoucher } = require('../utils/signatures');
 const { getAccountByNetworkId, getTransactionSigner } = require('./accounts');
+const { ipfs } = require('../config');
 
 /**
  * Stores a signed mint voucher in the DB for use by the ZKL signer service.
@@ -16,7 +16,7 @@ const { getAccountByNetworkId, getTransactionSigner } = require('./accounts');
  */
 const storeVoucher = async (options) => {
   const {
-    balance, signedVoucher, chainId,
+    balance, roleId, signedVoucher, chainId,
   } = options;
 
   const contractAddress = options.contractAddress.toLowerCase();
@@ -24,7 +24,7 @@ const storeVoucher = async (options) => {
 
   const exists = await voucherModel.findOne({
     where: {
-      contractAddress, userAddress, balance, chainId,
+      contractAddress, userAddress, balance, roleId, chainId,
     },
   });
 
@@ -33,7 +33,7 @@ const storeVoucher = async (options) => {
   // @TODO validate voucher before storing - i.e signer is MINTER
 
   const newVoucher = await voucherModel.create({
-    contractAddress, userAddress, balance, signedVoucher, chainId,
+    contractAddress, userAddress, balance, signedVoucher, roleId, chainId,
   });
 
   return newVoucher;
@@ -44,7 +44,7 @@ const storeVoucher = async (options) => {
  */
 const deleteVoucher = async (options) => {
   const {
-    id, contractAddress, userAddress, balance, chainId,
+    id, contractAddress, userAddress, balance, chainId, roleId,
   } = options;
 
   if (id) {
@@ -52,10 +52,10 @@ const deleteVoucher = async (options) => {
     return { success: true };
   }
 
-  if (contractAddress && userAddress && balance && chainId) {
+  if (contractAddress && userAddress && balance && chainId && roleId) {
     await voucherModel.destroy({
       where: {
-        contractAddress, userAddress, balance, chainId,
+        contractAddress, userAddress, balance, roleId, chainId,
       },
     });
     return { success: true };
@@ -70,13 +70,14 @@ const deleteVoucher = async (options) => {
 const getAllVouchers = async (options) => {
   const contractAddress = options.contractAddress.toLowerCase();
   const userAddress = options.userAddress.toLowerCase();
-  const { chainId } = options;
+  const { chainId, roleId } = options;
 
   const vouchers = await voucherModel.findAll({
     where: {
       userAddress,
       contractAddress,
       chainId,
+      roleId,
     },
     raw: true,
   });
@@ -95,26 +96,36 @@ const getAllVouchers = async (options) => {
 const getVoucher = async (options) => {
   // @TODO Implement logic to enable ERC20, ERC1155 signed vouchers
 
-  const { userAddress, contractAddress, chainId } = options;
+  const {
+    userAddress, contractAddress, chainId, roleId,
+  } = options;
 
-  const vouchers = await getAllVouchers({ userAddress, contractAddress, chainId });
+  const vouchers = await getAllVouchers({
+    userAddress, contractAddress, chainId, roleId,
+  });
 
   if (vouchers.length > 0) {
     // Return the voucher with the highest balance field if it exists
     return vouchers.sort((voucherA, voucherB) => voucherB.balance - voucherA.balance)[0];
   }
 
-  // @TODO Figure out a better place to put this (import ZKL module potentially)
   // Detects if automint is enabled && generates a voucher signed by the signer service
-  const { abi } = generateContractABI(3);
   const { account } = getAccountByNetworkId(chainId)[0];
   const signer = getTransactionSigner(chainId);
-  const contractAbstraction = new ethers.Contract(contractAddress, abi, signer);
 
-  const minterBalance = (await contractAbstraction.balanceOf(userAddress)).toNumber();
-  const contractName = await contractAbstraction.name();
-  const autoMintEnabled = await contractAbstraction.hasRole(
-    ethers.utils.keccak256(ethers.utils.toUtf8Bytes('MINTER_ROLE')),
+  const zklMemberNft = await MemberNft.setup({
+    provider: signer,
+    address: contractAddress,
+    infuraIpfsProjectId: ipfs.projectId,
+    infuraIpfsProjectSecret: ipfs.projectSecret,
+  });
+
+  const minterBalance = await zklMemberNft.balanceOf(userAddress);
+  const contractName = await zklMemberNft.name();
+  const { price } = await zklMemberNft.getRoleData(roleId);
+
+  const autoMintEnabled = await zklMemberNft.hasRole(
+    'MINTER_ROLE',
     account,
   );
 
@@ -126,6 +137,7 @@ const getVoucher = async (options) => {
     contractAddress,
     wallet: signer,
     balance: minterBalance + 1,
+    salePrice: price,
     minter: userAddress,
   });
 
@@ -133,6 +145,7 @@ const getVoucher = async (options) => {
     contractAddress,
     userAddress,
     balance: minterBalance + 1,
+    roleId,
     signedVoucher,
   };
 };
