@@ -29,7 +29,7 @@ module.exports = {
     (address) => (address.toLowerCase()),
   ),
   zkl: {
-    memberNft: process.env.ZKL_MEMBER_NFT || '0xaa331b70845b11f1afb0a566c566a2a16018558a',
+    memberNft: process.env.ZKL_MEMBER_NFT || '0xa5Cf9B89e11B0fAa5123882eDd4358726B443B31',
     memberNftChainId: process.env.ZKL_NFT_CHAINID || '137',
   },
   ipfs: {
