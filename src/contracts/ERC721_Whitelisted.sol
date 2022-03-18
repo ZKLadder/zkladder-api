@@ -20,7 +20,7 @@ contract ERC721_Whitelisted is
     EIP712
 {
     // Resolves to JSON blob of collection level metadata
-    string public collectionDataUri;
+    string public contractURI;
 
     // Recieves proceeds from new mints
     address payable public beneficiaryAddress;
@@ -48,10 +48,10 @@ contract ERC721_Whitelisted is
     constructor(
         string memory name,
         string memory symbol,
-        string memory _collectionDataUri,
+        string memory _contractURI,
         address payable beneficiary
     ) ERC721(name, symbol) EIP712(name, "1") {
-        collectionDataUri = _collectionDataUri;
+        contractURI = _contractURI;
         beneficiaryAddress = beneficiary;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
@@ -166,13 +166,13 @@ contract ERC721_Whitelisted is
 
     /**
       @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the NFT collection's metadata uri
-      @param newCollectionDataUri New collectionDataUri string
+      @param newContractURI New contractURI string
      */
-    function setCollectionDataUri(string memory newCollectionDataUri)
+    function setContractUri(string memory newContractURI)
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        collectionDataUri = newCollectionDataUri;
+        contractURI = newContractURI;
     }
 
     /**

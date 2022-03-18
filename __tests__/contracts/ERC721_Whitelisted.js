@@ -20,17 +20,17 @@ describe('ERC721_Whitelisted', () => {
   it('Correctly deploys with constructor params', async () => {
     expect(await ERC721Whitelisted.name()).to.equal('MockNFT');
     expect(await ERC721Whitelisted.symbol()).to.equal('MNFT');
-    expect(await ERC721Whitelisted.collectionDataUri()).to.equal('ipfs://mock12345');
+    expect(await ERC721Whitelisted.contractURI()).to.equal('ipfs://mock12345');
     expect((await ERC721Whitelisted.beneficiaryAddress())
       .toLowerCase())
       .to.equal('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'.toLowerCase());
   });
 
   it('Correctly sets collectionDataUri', async () => {
-    const tx = await ERC721Whitelisted.setCollectionDataUri('mockSetUri');
+    const tx = await ERC721Whitelisted.setContractUri('mockSetUri');
     await tx.wait();
 
-    expect(await ERC721Whitelisted.collectionDataUri()).to.deep.equal('mockSetUri');
+    expect(await ERC721Whitelisted.contractURI()).to.deep.equal('mockSetUri');
   });
 
   it('Throws when a non-admin calls setCollectionDataUri', async () => {
@@ -39,7 +39,7 @@ describe('ERC721_Whitelisted', () => {
     const nonAdmin = ERC721Whitelisted.connect(signers[1]);
 
     try {
-      const tx = await nonAdmin.setCollectionDataUri('mockSetUri');
+      const tx = await nonAdmin.setContractUri('mockSetUri');
       await tx.wait();
       expect(true).to.equal(false);
     } catch (error) {

@@ -47,7 +47,7 @@ const nftWhitelistedVoucher = async (options) => {
   const value = {
     balance,
     minter,
-    salePrice: salePriceInWei,
+    salePrice: salePriceInWei.toString(),
   };
 
   const signature = await signer._signTypedData(domain, types, value);
