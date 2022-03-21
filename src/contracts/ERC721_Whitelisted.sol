@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
   @title Whitelisted ERC721
@@ -19,6 +20,8 @@ contract ERC721_Whitelisted is
     AccessControlEnumerable,
     EIP712
 {
+    using Strings for uint256;
+
     // Resolves to JSON blob of collection level metadata
     string public contractURI;
 
@@ -30,6 +33,8 @@ contract ERC721_Whitelisted is
 
     // Royalty in basis points ie. 500 = 5%
     uint256 public royaltyBasis;
+
+    string public baseURI;
 
     using Counters for Counters.Counter;
     Counters.Counter private _totalSupply;
@@ -137,6 +142,12 @@ contract ERC721_Whitelisted is
         );
 
         uint256 tokenId = totalSupply();
+
+        //If tokenUri is left empty then use baseUri+tokenId
+        if (bytes(tokenUri).length == 0 && bytes(baseURI).length > 0) {
+            tokenUri = string(abi.encodePacked(baseURI, tokenId.toString()));
+        }
+
         _safeMint(voucher.minter, tokenId);
         _setTokenURI(tokenId, tokenUri);
         _totalSupply.increment();
@@ -159,6 +170,12 @@ contract ERC721_Whitelisted is
         onlyRole(MINTER_ROLE)
     {
         uint256 tokenId = totalSupply();
+
+        //If tokenUri is left empty then use baseUri+tokenId
+        if (bytes(tokenUri).length == 0 && bytes(baseURI).length > 0) {
+            tokenUri = string(abi.encodePacked(baseURI, tokenId.toString()));
+        }
+
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, tokenUri);
         _totalSupply.increment();
@@ -173,6 +190,17 @@ contract ERC721_Whitelisted is
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         contractURI = newContractURI;
+    }
+
+    /**
+      @notice Enables any account assigned as DEFAULT_ADMIN_ROLE to set the NFT baseURI
+      @param newBaseURI New baseURI string
+     */
+    function setBaseUri(string memory newBaseURI)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        baseURI = newBaseURI;
     }
 
     /**

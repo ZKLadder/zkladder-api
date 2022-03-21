@@ -26,20 +26,41 @@ describe('ERC721_Whitelisted', () => {
       .to.equal('0x70997970c51812dc3a010c7d01b50e0d17dc79c8'.toLowerCase());
   });
 
-  it('Correctly sets collectionDataUri', async () => {
+  it('Correctly sets contractURI', async () => {
     const tx = await ERC721Whitelisted.setContractUri('mockSetUri');
     await tx.wait();
 
     expect(await ERC721Whitelisted.contractURI()).to.deep.equal('mockSetUri');
   });
 
-  it('Throws when a non-admin calls setCollectionDataUri', async () => {
+  it('Throws when a non-admin calls setContractUri', async () => {
     const signers = await ethers.getSigners();
 
     const nonAdmin = ERC721Whitelisted.connect(signers[1]);
 
     try {
       const tx = await nonAdmin.setContractUri('mockSetUri');
+      await tx.wait();
+      expect(true).to.equal(false);
+    } catch (error) {
+      expect(error.message).to.equal('VM Exception while processing transaction: reverted with reason string \'AccessControl: account 0x70997970c51812dc3a010c7d01b50e0d17dc79c8 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000\'');
+    }
+  });
+
+  it('Correctly sets baseUri', async () => {
+    const tx = await ERC721Whitelisted.setBaseUri('mockSetUri');
+    await tx.wait();
+
+    expect(await ERC721Whitelisted.baseURI()).to.deep.equal('mockSetUri');
+  });
+
+  it('Throws when a non-admin calls setBaseUri', async () => {
+    const signers = await ethers.getSigners();
+
+    const nonAdmin = ERC721Whitelisted.connect(signers[1]);
+
+    try {
+      const tx = await nonAdmin.setBaseUri('mockSetUri');
       await tx.wait();
       expect(true).to.equal(false);
     } catch (error) {
@@ -113,6 +134,21 @@ describe('ERC721_Whitelisted', () => {
     expect(await ERC721Whitelisted.balanceOf(signers[1].address)).to.deep.equal(BigNumber.from(1));
     expect(await ERC721Whitelisted.ownerOf(0)).to.equal(signers[1].address);
     expect(await ERC721Whitelisted.tokenURI(0)).to.equal('http://mockURI.com');
+  });
+
+  it('Correctly mints a token with mintTo when tokenUri is excluded', async () => {
+    const signers = await ethers.getSigners();
+    const balance = await ERC721Whitelisted.totalSupply();
+    expect(balance).to.deep.equal(BigNumber.from(0));
+
+    await ERC721Whitelisted.setBaseUri('ipfs://mockNFTdirectory/');
+    const tx = await ERC721Whitelisted.mintTo(signers[1].address, '');
+    await tx.wait();
+
+    expect(await ERC721Whitelisted.totalSupply()).to.deep.equal(BigNumber.from(1));
+    expect(await ERC721Whitelisted.balanceOf(signers[1].address)).to.deep.equal(BigNumber.from(1));
+    expect(await ERC721Whitelisted.ownerOf(0)).to.equal(signers[1].address);
+    expect(await ERC721Whitelisted.tokenURI(0)).to.equal('ipfs://mockNFTdirectory/0');
   });
 
   it('Fails when mintTo is called by a non-minter role', async () => {
@@ -309,6 +345,34 @@ describe('ERC721_Whitelisted', () => {
     expect(await ERC721Whitelisted.balanceOf(signers[1].address)).to.deep.equal(BigNumber.from(1));
     expect(await ERC721Whitelisted.ownerOf(0)).to.equal(signers[1].address);
     expect(await ERC721Whitelisted.tokenURI(0)).to.equal('https://mockToken.com');
+  });
+
+  it('Correctly mints with a valid mintVoucher and no tokenURI', async () => {
+    const signers = await ethers.getSigners();
+
+    const admin = ERC721Whitelisted.connect(signers[0]);
+
+    await admin.setBaseUri('ipfs://mockNFT/');
+
+    const nonAdmin = ERC721Whitelisted.connect(signers[1]);
+
+    const signature = await nftWhitelistedVoucher({
+      chainId: 31337,
+      contractName: 'MockNFT',
+      contractAddress: nonAdmin.address,
+      wallet: signers[0],
+      balance: 1,
+      salePrice: 0.005,
+      minter: signers[1].address,
+    });
+
+    const invalidSigTx = await nonAdmin.mint(signature, '', { value: BigNumber.from('50000000000000000') });
+    await invalidSigTx.wait();
+
+    expect(await ERC721Whitelisted.totalSupply()).to.deep.equal(BigNumber.from(1));
+    expect(await ERC721Whitelisted.balanceOf(signers[1].address)).to.deep.equal(BigNumber.from(1));
+    expect(await ERC721Whitelisted.ownerOf(0)).to.equal(signers[1].address);
+    expect(await ERC721Whitelisted.tokenURI(0)).to.equal('ipfs://mockNFT/0');
   });
 
   it('Correctly sets isTransferrable to true by default', async () => {
