@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const uniqueString = require('password-generator');
-const projectModel = require('../data/postgres/models/project');
+const { projectModel } = require('../data/postgres/index');
 const { ClientError } = require('../utils/error');
 
 const createProject = async (options) => {

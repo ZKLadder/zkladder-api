@@ -1,60 +1,63 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../index');
 const { validateAddress } = require('../../../utils/validators');
 const getNetworkById = require('../../../utils/getNetworkById');
 
-const Voucher = sequelize.define('voucher', {
-  balance: { // Same as balance field of signedVoucher
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      min: 0,
-    },
-  },
-  roleId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  contractAddress: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      isEthAddress: (value) => {
-        if (!validateAddress(value)) throw new Error('contractAddress is not a valid address');
-        return value;
+module.exports = (sequelize) => {
+  sequelize.define('voucher', {
+    balance: { // Same as balance field of signedVoucher
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 0,
       },
     },
-  },
-  userAddress: { // Same as minter field of signedVoucher
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      isEthAddress: (value) => {
-        if (!validateAddress(value)) throw new Error('userAddress is not a valid address');
-        return value;
+    roleId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    contractAddress: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEthAddress: (value) => {
+          if (!validateAddress(value)) throw new Error('contractAddress is not a valid address');
+          return value;
+        },
+      },
+      references: {
+        model: 'contract',
+        key: 'address',
       },
     },
-  },
-  chainId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      isSupportedNetwork: (value) => {
-        getNetworkById(value);
-        return value;
+    userAddress: { // Same as minter field of signedVoucher
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isEthAddress: (value) => {
+          if (!validateAddress(value)) throw new Error('userAddress is not a valid address');
+          return value;
+        },
       },
     },
-  },
-  signedVoucher: { // {balance:number, minter:string, signature:string}
-    type: DataTypes.JSON,
-    allowNull: false,
-    validate: {
-      isValidVoucher: (value) => {
-        if (value.balance && value.minter && value.salePrice && value.signature) return value;
-        throw new Error('signedVoucher is not formatted correctly');
+    chainId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isSupportedNetwork: (value) => {
+          getNetworkById(value);
+          return value;
+        },
       },
     },
-  },
-});
-
-module.exports = Voucher;
+    signedVoucher: { // {balance:number, minter:string, signature:string}
+      type: DataTypes.JSON,
+      allowNull: false,
+      validate: {
+        isValidVoucher: (value) => {
+          if (value.balance && value.minter && value.salePrice && value.signature) return value;
+          throw new Error('signedVoucher is not formatted correctly');
+        },
+      },
+    },
+  });
+};

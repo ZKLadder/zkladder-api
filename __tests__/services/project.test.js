@@ -2,11 +2,13 @@ const uniqueString = require('password-generator');
 const { createProject, getProjects, updateProject } = require('../../src/services/project');
 const { ClientError } = require('../../src/utils/error');
 
-jest.mock('../../src/data/postgres/models/project', () => ({
-  create: jest.fn(),
-  findAll: jest.fn(),
-  update: jest.fn().mockReturnThis(),
-  where: jest.fn(),
+jest.mock('../../src/data/postgres/index', () => ({
+  projectModel: {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    update: jest.fn().mockReturnThis(),
+    where: jest.fn(),
+  },
 }));
 
 jest.mock('sequelize', () => ({
@@ -15,7 +17,7 @@ jest.mock('sequelize', () => ({
 
 jest.mock('password-generator');
 
-const mockProjectModel = require('../../src/data/postgres/models/project');
+const { projectModel: mockProjectModel } = require('../../src/data/postgres/index');
 
 describe('createProject tests', () => {
   uniqueString.mockReturnValue('uniqueId');
