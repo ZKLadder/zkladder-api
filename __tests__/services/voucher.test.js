@@ -9,11 +9,13 @@ const {
 const { getAccountByNetworkId, getTransactionSigner } = require('../../src/services/accounts');
 const { ClientError } = require('../../src/utils/error');
 
-jest.mock('../../src/data/postgres/models/voucher', () => ({
-  create: jest.fn(),
-  findOne: jest.fn(),
-  findAll: jest.fn(),
-  destroy: jest.fn(),
+jest.mock('../../src/data/postgres/index', () => ({
+  voucherModel: {
+    create: jest.fn(),
+    findOne: jest.fn(),
+    findAll: jest.fn(),
+    destroy: jest.fn(),
+  },
 }));
 
 jest.mock('../../src/utils/signatures', () => ({
@@ -39,7 +41,7 @@ jest.mock('ethers', () => ({
   },
 }));
 
-const mockVoucherModel = require('../../src/data/postgres/models/voucher');
+const { voucherModel: mockVoucherModel } = require('../../src/data/postgres/index');
 const { nftWhitelistedVoucher: mockNftWhitelistedVoucher } = require('../../src/utils/signatures');
 
 describe('storeVoucher service', () => {

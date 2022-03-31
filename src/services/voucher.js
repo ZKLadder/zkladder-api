@@ -1,5 +1,5 @@
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
-const voucherModel = require('../data/postgres/models/voucher');
+const { voucherModel } = require('../data/postgres/index');
 const { ClientError } = require('../utils/error');
 const { nftWhitelistedVoucher } = require('../utils/signatures');
 const { getAccountByNetworkId, getTransactionSigner } = require('./accounts');

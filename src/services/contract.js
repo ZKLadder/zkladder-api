@@ -1,10 +1,16 @@
 const { Op } = require('sequelize');
-const contractModel = require('../data/postgres/models/contract');
+const { postgres } = require('../data/postgres/index');
+const { contractModel } = require('../data/postgres/index');
+const { voucherModel } = require('../data/postgres/index');
 
 const createContract = async (options) => {
   const {
-    address, projectId, chainId, templateId, creator, admins,
+    projectId, chainId, templateId,
   } = options;
+
+  const address = options.address?.toLowerCase();
+  const creator = options.creator?.toLowerCase();
+  const admins = options.admins?.map((admin) => (admin.toLowerCase()));
 
   const newProject = await contractModel.create({
     address, projectId, chainId, templateId, creator, admins,
@@ -17,26 +23,44 @@ const getContracts = async (options) => {
   const {
     address, projectId, chainId, userAddress,
   } = options;
-  const query = { where: {} };
+
+  const where = {};
 
   if (address) {
-    query.where.address = address;
+    where.address = address.toLowerCase();
   }
 
   if (projectId) {
-    query.where.projectId = projectId;
+    where.projectId = projectId;
   }
 
   if (chainId) {
-    query.where.chainId = chainId;
+    where.chainId = chainId;
   }
 
   if (userAddress) {
-    query.where.creator = userAddress;
-    query.where.admins = { [Op.contains]: [userAddress] };
+    where[Op.or] = [
+      { creator: { [Op.eq]: userAddress.toLowerCase() } },
+      { admins: { [Op.contains]: [userAddress.toLowerCase()] } },
+    ];
   }
-  const contracts = await contractModel.findAll(query);
-  return contracts;
+
+  const contracts = await contractModel.findAll({
+    where,
+    attributes: {
+      include: [[postgres.fn('COUNT', postgres.col('contractAddress')), 'whitelisted']],
+    },
+    include: [{
+      model: voucherModel,
+      attributes: [],
+    }],
+    group: ['contract.address'],
+    raw: true,
+  });
+
+  return contracts.map(
+    (contract) => ({ ...contract, whitelisted: parseInt(contract.whitelisted, 10) }),
+  );
 };
 
 module.exports = { createContract, getContracts };

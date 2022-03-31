@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.post('/', authentication, async (req, res, next) => {
   try {
-    const project = await storeVoucher(req.body);
-    res.send(project);
+    const voucher = await storeVoucher(req.body);
+    res.send(voucher);
   } catch (error) {
     next(error);
   }
@@ -15,8 +15,8 @@ router.post('/', authentication, async (req, res, next) => {
 
 router.delete('/', authentication, async (req, res, next) => {
   try {
-    const project = await deleteVoucher(req.body);
-    res.send(project);
+    const result = await deleteVoucher(req.body);
+    res.send(result);
   } catch (error) {
     next(error);
   }
@@ -24,8 +24,8 @@ router.delete('/', authentication, async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const signature = await getVoucher(req.query);
-    res.send(signature);
+    const voucher = await getVoucher(req.query);
+    res.send(voucher);
   } catch (error) {
     next(error);
   }

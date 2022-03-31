@@ -8,7 +8,7 @@ const v1 = require('./routes/v1');
 const error = require('./routes/middleware/error');
 const healthz = require('./routes/healthz');
 const logger = require('./utils/logger');
-const postgres = require('./data/postgres/index');
+const { postgres } = require('./data/postgres/index');
 
 app.use(express.json());
 
