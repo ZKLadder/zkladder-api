@@ -234,7 +234,7 @@ describe('hasAccess', () => {
   test('Returns false when timestamp issued in the future', async () => {
     const content = {
       message: {
-        timestamp: 101,
+        timestamp: 111,
       },
     };
 
