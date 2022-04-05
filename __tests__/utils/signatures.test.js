@@ -234,7 +234,7 @@ describe('hasAccess', () => {
   test('Returns false when timestamp issued in the future', async () => {
     const content = {
       message: {
-        timestamp: 101,
+        timestamp: 110001,
       },
     };
 
@@ -242,7 +242,7 @@ describe('hasAccess', () => {
 
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
 
-    mockDate.mockReturnValue(100);
+    mockDate.mockReturnValue(100000);
 
     totalSupply.mockResolvedValueOnce(10);
     getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);

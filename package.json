@@ -35,7 +35,7 @@
   "dependencies": {
     "@metamask/eth-sig-util": "^4.0.0",
     "@openzeppelin/contracts": "^4.3.2",
-    "@zkladder/zkladder-sdk-ts": "^1.0.11",
+    "@zkladder/zkladder-sdk-ts": "^1.0.12",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
