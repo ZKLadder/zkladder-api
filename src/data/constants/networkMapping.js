@@ -1,3 +1,5 @@
+const config = require('../../config');
+
 module.exports = {
   1: {
     name: 'Ethereum',
@@ -28,6 +30,8 @@ module.exports = {
     currency: 'MATIC',
     chainId: 137,
     RPCEndpoint: 'https://polygon-mainnet.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    explorerEndpoint: 'https://api.polygonscan.com/api',
+    explorerApiKey: config.etherscan.polygon,
   },
   5777: {
     name: 'Ganache',

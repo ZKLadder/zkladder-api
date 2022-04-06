@@ -1,6 +1,10 @@
+/* eslint-disable no-console */
 const solc = require('solc');
 const { readFileSync } = require('fs');
-const { getContractById } = require('../utils/contract');
+const hardhat = require('hardhat');
+const { getContractById, abiEncode } = require('../utils/contract');
+const { verify } = require('../utils/etherscan');
+const { validateConstructorParams } = require('../utils/contract');
 
 const getContractSourceFromPath = (path) => {
   if (!path) throw new Error('getContractSourceFromPath called without path');
@@ -41,8 +45,45 @@ const generateContractABI = ((contractId) => {
   ).contracts['zk-contract.sol'][name];
 });
 
+const verifyContract = async (contractId, chainId, contractAddress, constructParams) => {
+  const originalLogFunction = console.log;
+
+  const { src, name } = getContractById(contractId);
+
+  let sourcecode;
+
+  // Hacky way to capture log output from hardhat flatten operation. @TODO refactor
+  console.log = (data) => {
+    sourcecode = `// SPDX-License-Identifier: MIXED\n\n${data.replace(/SPDX-License-Identifier:/gm, 'License-Identifier:').trim()}`;
+  };
+
+  await hardhat.run('flatten', src);
+
+  // Restore console.log
+  console.log = originalLogFunction;
+
+  console.log(sourcecode);
+
+  const compiledContract = generateContractABI(contractId);
+
+  // Throws if constructParams are shaped incorrectly
+  validateConstructorParams(compiledContract.abi, constructParams);
+
+  const result = await verify(
+    chainId,
+    sourcecode,
+    contractAddress,
+    name,
+    'v0.8.8+commit.dddeac2f',
+    abiEncode('constructor', compiledContract.abi, constructParams).slice(2),
+  );
+
+  return result;
+};
+
 module.exports = {
   generateContractABI,
+  verifyContract,
 
   // exported for unit testing
   getContractImport,

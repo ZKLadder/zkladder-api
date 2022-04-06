@@ -36,4 +36,9 @@ module.exports = {
     projectId: process.env.INFURA_IPFS_ID,
     projectSecret: process.env.INFURA_IPFS_SECRET,
   },
+  etherscan: {
+    polygon: process.env.POLYGON_EXPLORER_API_KEY,
+    mainnet: process.env.MAINNET_EXPLORER_API_KEY,
+    rinkeby: process.env.RINKEBY_EXPLORER_API_KEY,
+  },
 };
