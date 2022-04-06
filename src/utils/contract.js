@@ -1,3 +1,4 @@
+const { utils } = require('ethers');
 const {
   validateAddress, validateBoolean, validateString, validateNumber,
 } = require('./validators');
@@ -49,8 +50,29 @@ const getContractById = (contractId) => {
   return contracts[contractId];
 };
 
+const abiEncode = (functionName, abi, params) => {
+  const abiCoder = new utils.AbiCoder();
+  let functionAbi;
+  if (functionName === 'constructor') {
+    validateConstructorParams(abi, params);
+    functionAbi = abi.find((func) => func.type === 'constructor');
+  } else {
+    validateFunctionParams(abi, functionName, params);
+    functionAbi = abi.find((func) => func.name === functionName);
+  }
+
+  const types = [];
+
+  functionAbi.inputs.forEach((param) => {
+    types.push(param.type);
+  });
+
+  return abiCoder.encode(types, params);
+};
+
 module.exports = {
   validateConstructorParams,
   validateFunctionParams,
   getContractById,
+  abiEncode,
 };

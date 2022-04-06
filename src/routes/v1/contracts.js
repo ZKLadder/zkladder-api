@@ -2,9 +2,10 @@ const express = require('express');
 const { ClientError } = require('../../utils/error');
 const { deployContract } = require('../../services/deploy');
 const { getContractById } = require('../../utils/contract');
-const { generateContractABI } = require('../../services/compile');
+const { generateContractABI, verifyContract } = require('../../services/compile');
 const { createContract, getContracts } = require('../../services/contract');
 const authentication = require('../middleware/authentication');
+const { checkVerification } = require('../../utils/etherscan');
 
 const router = express.Router();
 
@@ -52,6 +53,30 @@ router.get('/:contractId/abi', async (req, res, next) => {
     res.send({
       name, contractId, abi, bytecode,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:contractId/verify', async (req, res, next) => {
+  try {
+    const { contractId } = req.params;
+    const { chainId, constructParams, contractAddress } = req.body;
+
+    if (!contractId || !chainId || !contractAddress || !constructParams) throw new ClientError('Missing required parameter');
+    const result = await verifyContract(contractId, chainId, contractAddress, constructParams);
+    res.send(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/checkVerification', async (req, res, next) => {
+  try {
+    const { guid, chainId } = req.body;
+
+    const result = await checkVerification(guid, chainId);
+    res.send(result);
   } catch (error) {
     next(error);
   }
