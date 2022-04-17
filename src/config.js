@@ -36,4 +36,8 @@ module.exports = {
     projectId: process.env.INFURA_IPFS_ID,
     projectSecret: process.env.INFURA_IPFS_SECRET,
   },
+  covalent: {
+    apiKey: process.env.COVALENT_API_KEY,
+    url: process.env.COVALENT_URL || 'https://api.covalenthq.com',
+  },
 };
