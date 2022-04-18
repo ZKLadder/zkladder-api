@@ -1,4 +1,4 @@
-/* eslint-disable no-underscore-dangle */
+/* eslint-disable no-underscore-dangle, prefer-destructuring */
 
 const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
@@ -66,9 +66,16 @@ const nftWhitelistedVoucher = async (options) => {
  * @returns boolean indiciating if signer has access
  */
 const hasAccess = async (signature) => {
-  const decodedSignature = Buffer.from(signature, 'base64').toString('ascii').split('_');
-  const content = JSON.parse(decodedSignature[0]);
-  const digest = decodedSignature[1];
+  let content;
+  let digest;
+
+  try {
+    const decodedSignature = Buffer.from(signature, 'base64').toString('ascii').split('_');
+    content = JSON.parse(decodedSignature[0]);
+    digest = decodedSignature[1];
+  } catch (err) {
+    return { session: false };
+  }
 
   const verifiedAddress = sigUtil.recoverTypedSignature({
     data: content,
