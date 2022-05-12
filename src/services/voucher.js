@@ -68,17 +68,30 @@ const deleteVoucher = async (options) => {
  * Gets all of {userAddress} vouchers for {contractAddress}
  */
 const getAllVouchers = async (options) => {
-  const contractAddress = options.contractAddress.toLowerCase();
-  const userAddress = options.userAddress.toLowerCase();
+  const contractAddress = options.contractAddress?.toLowerCase();
+  const userAddress = options.userAddress?.toLowerCase();
   const { chainId, roleId } = options;
 
+  const where = {};
+
+  if (userAddress) {
+    where.userAddress = userAddress;
+  }
+
+  if (contractAddress) {
+    where.contractAddress = contractAddress;
+  }
+
+  if (chainId) {
+    where.chainId = chainId;
+  }
+
+  if (roleId) {
+    where.roleId = roleId;
+  }
+
   const vouchers = await voucherModel.findAll({
-    where: {
-      userAddress,
-      contractAddress,
-      chainId,
-      roleId,
-    },
+    where,
     raw: true,
   });
 
