@@ -1,5 +1,7 @@
 const express = require('express');
-const { storeVoucher, deleteVoucher, getVoucher } = require('../../services/voucher');
+const {
+  storeVoucher, deleteVoucher, getVoucher, getAllVouchers,
+} = require('../../services/voucher');
 const authentication = require('../middleware/authentication');
 
 const router = express.Router();
@@ -25,6 +27,15 @@ router.delete('/', authentication, async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const voucher = await getVoucher(req.query);
+    res.send(voucher);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/all', async (req, res, next) => {
+  try {
+    const voucher = await getAllVouchers(req.query);
     res.send(voucher);
   } catch (error) {
     next(error);
