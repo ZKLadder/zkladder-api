@@ -1,7 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { validateAddress } = require('../../../utils/validators');
 const getNetworkById = require('../../../utils/getNetworkById');
-const { getContractById } = require('../../../utils/contract');
 
 module.exports = (sequelize) => {
   sequelize.define('contract', {
@@ -36,12 +35,6 @@ module.exports = (sequelize) => {
     templateId: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        isSupportedContractId: (value) => {
-          getContractById(value);
-          return value;
-        },
-      },
     },
     creator: {
       type: DataTypes.STRING,
