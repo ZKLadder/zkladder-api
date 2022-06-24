@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       allowNull: false,
       validate: {
         isEthAddress: (value) => {
-          if (!validateAddress(value)) throw new Error('Contract Address is not valid');
+          if (!validateAddress(value)) throw new Error('creatorAddress is not valid');
           return value;
         },
       },
