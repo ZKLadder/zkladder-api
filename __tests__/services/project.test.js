@@ -124,10 +124,8 @@ describe('updateProject tests', () => {
       description: 'test description',
       image: '123',
       admins: ['0x0', '0x1', '0x2'],
-    });
-    expect(mockProjectModel.update().where).toHaveBeenCalledWith({
-      id: '12345',
-    });
+    },
+    { where: { id: '12345' } });
   });
 
   test('Returns the correct response', async () => {
@@ -136,7 +134,7 @@ describe('updateProject tests', () => {
       name: 'test',
       description: 'test description',
     };
-    mockProjectModel.where.mockResolvedValue('test123');
+    mockProjectModel.update.mockResolvedValue('test123');
     const result = await updateProject(options);
     expect(result).toStrictEqual('test123');
   });
@@ -148,7 +146,7 @@ describe('updateProject tests', () => {
       description: 'test description',
     };
     const mockError = new Error('test123');
-    mockProjectModel.where.mockRejectedValue(mockError);
+    mockProjectModel.update.mockRejectedValue(mockError);
     await expect(updateProject(options)).rejects.toEqual(mockError);
   });
 

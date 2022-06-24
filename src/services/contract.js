@@ -12,11 +12,11 @@ const createContract = async (options) => {
   const creator = options.creator?.toLowerCase();
   const admins = options.admins?.map((admin) => (admin.toLowerCase()));
 
-  const newProject = await contractModel.create({
+  const newContract = await contractModel.create({
     address, projectId, chainId, templateId, creator, admins,
   });
 
-  return newProject;
+  return newContract;
 };
 
 const getContracts = async (options) => {
