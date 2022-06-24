@@ -39,8 +39,10 @@ const updateProject = async (options) => {
 
   const updatedProject = await projectModel.update({
     name, description, image, admins,
-  }).where({
-    id,
+  }, {
+    where: {
+      id,
+    },
   });
   return updatedProject;
 };

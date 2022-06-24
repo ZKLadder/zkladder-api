@@ -1,5 +1,5 @@
 const {
-  validateString, validateNumber, validateBoolean, validateAddress,
+  validateString, validateNumber, validateBoolean, validateAddress, validateAccessSchema,
 } = require('../../src/utils/validators');
 
 describe('Validators tests', () => {
@@ -34,5 +34,67 @@ describe('Validators tests', () => {
     expect(validateBoolean(['string'])).toStrictEqual(false);
     expect(validateBoolean({ test: 999 })).toStrictEqual(false);
     expect(validateBoolean('string')).toStrictEqual(false);
+  });
+
+  test('validateAccessSchemas', () => {
+    expect(() => { validateAccessSchema({}); }).toThrow(new Error('AccessSchemas must be an array type'));
+
+    expect(() => { validateAccessSchema([{}]); }).toThrow(new Error('Schema at index 0 has incorrectly formatted contract address'));
+
+    expect(() => { validateAccessSchema([{ contractAddress: '12345' }]); }).toThrow(new Error('Schema at index 0 has incorrectly formatted chainId'));
+
+    expect(() => {
+      validateAccessSchema([{
+        contractAddress: '12345',
+        chainId: 31337,
+      }]);
+    }).toThrow(new Error('Schema at index 0 has incorrectly formatted returnValueTest'));
+
+    expect(() => {
+      validateAccessSchema([{
+        contractAddress: '12345',
+        chainId: 31337,
+        returnValueTest: {},
+      }]);
+    }).toThrow(new Error('Schema at index 0 is missing function or method params'));
+
+    expect(() => {
+      validateAccessSchema([{
+        contractAddress: '12345',
+        chainId: 31337,
+        returnValueTest: {},
+        functionParams: [],
+      }]);
+    }).toThrow(new Error('Schema at index 0 is missing function or method name'));
+
+    expect(() => {
+      validateAccessSchema([{
+        contractAddress: '12345',
+        chainId: 31337,
+        returnValueTest: {},
+        functionParams: [],
+        functionName: 'mockFunction',
+      }]);
+    }).toThrow(new Error('Schema at index 0 has incorrectly formatted functionAbi'));
+
+    expect(validateAccessSchema([{
+      contractAddress: '12345',
+      chainId: 31337,
+      returnValueTest: {},
+      functionParams: [],
+      functionName: 'mockFunction',
+      functionAbi: [],
+    }])).toStrictEqual(true);
+
+    expect(validateAccessSchema([{
+      contractAddress: '12345',
+      chainId: 31337,
+      returnValueTest: {},
+      functionParams: [],
+      functionName: 'mockFunction',
+      functionAbi: [],
+    },
+    { operator: 'or' },
+    ])).toStrictEqual(true);
   });
 });

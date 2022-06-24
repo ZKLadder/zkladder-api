@@ -26,6 +26,21 @@ const validateAddress = (constructParam) => {
   return true;
 };
 
+const validateAccessSchema = (accessSchemas) => {
+  if (!Array.isArray(accessSchemas)) throw new Error('AccessSchemas must be an array type');
+  accessSchemas.forEach((schema, i) => {
+    if (schema.operator === 'and' || schema.operator === 'or') return true;
+    if (typeof schema.contractAddress !== 'string') throw new Error(`Schema at index ${i} has incorrectly formatted contract address`);
+    if (!schema.chainId) throw new Error(`Schema at index ${i} has incorrectly formatted chainId`);
+    if (!schema.returnValueTest) throw new Error(`Schema at index ${i} has incorrectly formatted returnValueTest`);
+    if (!schema.parameters && !schema.functionParams) throw new Error(`Schema at index ${i} is missing function or method params`);
+    if (schema.functionName && !schema.functionAbi) throw new Error(`Schema at index ${i} has incorrectly formatted functionAbi`);
+    if (!schema.functionName && !schema.method) throw new Error(`Schema at index ${i} is missing function or method name`);
+    return true;
+  });
+
+  return true;
+};
 // TODO reimplement these as the need arises
 /* const validateDynamicArray = (constructParam, type) => {
   if (!Array.isArray(constructParam)) return false;
@@ -62,4 +77,5 @@ module.exports = {
   validateBoolean,
   validateAddress,
   validateNumber,
+  validateAccessSchema,
 };
