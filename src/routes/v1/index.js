@@ -12,6 +12,6 @@ router.use('/projects', projects);
 router.use('/vouchers', vouchers);
 router.use('/sessions', sessions);
 router.use('/data', data);
-router.use('/accessSchema', accessSchemas);
+router.use('/accessSchemas', accessSchemas);
 
 module.exports = router;

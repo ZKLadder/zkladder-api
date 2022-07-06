@@ -63,7 +63,7 @@ describe('Validators tests', () => {
         contractAddress: '12345',
         chainId: 31337,
         returnValueTest: {},
-        functionParams: [],
+        parameters: [],
       }]);
     }).toThrow(new Error('Schema at index 0 is missing function or method name'));
 
@@ -72,7 +72,7 @@ describe('Validators tests', () => {
         contractAddress: '12345',
         chainId: 31337,
         returnValueTest: {},
-        functionParams: [],
+        parameters: [],
         functionName: 'mockFunction',
       }]);
     }).toThrow(new Error('Schema at index 0 has incorrectly formatted functionAbi'));
@@ -81,7 +81,7 @@ describe('Validators tests', () => {
       contractAddress: '12345',
       chainId: 31337,
       returnValueTest: {},
-      functionParams: [],
+      parameters: [],
       functionName: 'mockFunction',
       functionAbi: [],
     }])).toStrictEqual(true);
@@ -90,7 +90,7 @@ describe('Validators tests', () => {
       contractAddress: '12345',
       chainId: 31337,
       returnValueTest: {},
-      functionParams: [],
+      parameters: [],
       functionName: 'mockFunction',
       functionAbi: [],
     },
