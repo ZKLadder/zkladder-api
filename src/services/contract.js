@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const { postgres } = require('../data/postgres/index');
 const { contractModel } = require('../data/postgres/index');
 const { voucherModel } = require('../data/postgres/index');
+const { ClientError } = require('../utils/error');
 
 const createContract = async (options) => {
   const {
@@ -63,4 +64,21 @@ const getContracts = async (options) => {
   );
 };
 
-module.exports = { createContract, getContracts };
+const updateContract = async (options) => {
+  const { address, projectId, admins } = options;
+
+  if (!address) throw new ClientError('address is a required field');
+
+  const updates = {};
+
+  if (projectId) updates.projectId = projectId;
+
+  if (admins) updates.admins = admins;
+
+  await contractModel.update(updates,
+    { where: { address } });
+
+  return { success: true };
+};
+
+module.exports = { createContract, getContracts, updateContract };
