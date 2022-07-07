@@ -49,9 +49,12 @@ module.exports = (sequelize) => {
     admins: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       validate: {
-        isEthAddress: (value) => {
-          if (!validateAddress(value)) throw new Error('Admins member is not a valid address');
-          return value;
+        isEthAddress: (admins) => {
+          admins.forEach((address) => {
+            if (!validateAddress(address)) throw new Error('Admins member is not a valid address');
+          });
+
+          return admins;
         },
       },
     },

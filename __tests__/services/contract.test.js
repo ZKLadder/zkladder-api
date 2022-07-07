@@ -1,4 +1,4 @@
-const { createContract, getContracts } = require('../../src/services/contract');
+const { createContract, getContracts, updateContract } = require('../../src/services/contract');
 
 jest.mock('../../src/data/postgres/index', () => ({
   postgres: {
@@ -9,6 +9,7 @@ jest.mock('../../src/data/postgres/index', () => ({
     create: jest.fn(),
     findAll: jest.fn(),
     where: jest.fn(),
+    update: jest.fn(),
   },
   voucherModel: 'mockVoucherModel',
 }));
@@ -161,5 +162,45 @@ describe('getContracts tests', () => {
     const mockError = 'test123';
     mockContractModel.findAll.mockRejectedValue(new Error(mockError));
     await expect(getContracts(options)).rejects.toEqual(new Error(mockError));
+  });
+});
+
+describe('updateContract tests', () => {
+  test('Correctly calls dependencies', async () => {
+    const options = {
+      address: '0x1234567',
+      projectId: '5632',
+      admins: ['0x0', '0x1', '0x2'],
+      extraField: 'extra',
+    };
+
+    await updateContract(options);
+
+    expect(mockContractModel.update).toHaveBeenCalledWith({
+      projectId: '5632',
+      admins: ['0x0', '0x1', '0x2'],
+    }, { where: { address: '0x1234567' } });
+  });
+
+  test('Returns the correct response', async () => {
+    const options = {
+      address: '0x1234567',
+      projectId: '5632',
+      admins: ['0x0', '0x1', '0x2'],
+    };
+    mockContractModel.update.mockResolvedValue('test123');
+    const result = await updateContract(options);
+    expect(result).toStrictEqual({ success: true });
+  });
+
+  test('Rethrows any errors', async () => {
+    const options = {
+      address: '0x1234567',
+      projectId: '5632',
+      admins: ['0x0', '0x1', '0x2'],
+    };
+    const mockError = new Error('test123');
+    mockContractModel.update.mockRejectedValue(mockError);
+    await expect(updateContract(options)).rejects.toEqual(mockError);
   });
 });
