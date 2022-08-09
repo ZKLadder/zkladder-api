@@ -1,4 +1,5 @@
 // adds chainId as field in composite private key on contracts
+// @TODO Add working framework and documentation for future migrations
 module.exports = {
   up: async (queryInterface) => {
     const transaction = await queryInterface.sequelize.transaction();
