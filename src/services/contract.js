@@ -55,7 +55,7 @@ const getContracts = async (options) => {
       model: voucherModel,
       attributes: [],
     }],
-    group: ['contract.address'],
+    group: ['contract.address', 'contract.chainId'],
     raw: true,
   });
 

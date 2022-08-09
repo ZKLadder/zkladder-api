@@ -25,6 +25,7 @@ module.exports = (sequelize) => {
     chainId: {
       type: DataTypes.STRING,
       allowNull: false,
+      primaryKey: true,
       validate: {
         isSupportedNetwork: (value) => {
           getNetworkById(value);

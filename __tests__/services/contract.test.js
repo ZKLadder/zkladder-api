@@ -95,7 +95,7 @@ describe('getContracts tests', () => {
         ],
       },
       group: [
-        'contract.address',
+        'contract.address', 'contract.chainId',
       ],
       include: [
         {
