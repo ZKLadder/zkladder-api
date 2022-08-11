@@ -65,7 +65,9 @@ const getContracts = async (options) => {
 };
 
 const updateContract = async (options) => {
-  const { address, projectId, admins } = options;
+  const {
+    address, chainId, projectId, admins,
+  } = options;
 
   if (!address) throw new ClientError('address is a required field');
 
@@ -76,7 +78,7 @@ const updateContract = async (options) => {
   if (admins) updates.admins = admins;
 
   await contractModel.update(updates,
-    { where: { address } });
+    { where: { address, chainId } });
 
   return { success: true };
 };

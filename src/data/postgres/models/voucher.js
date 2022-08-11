@@ -54,7 +54,10 @@ module.exports = (sequelize) => {
       allowNull: false,
       validate: {
         isValidVoucher: (value) => {
-          if (value.balance && value.minter && value.salePrice && value.signature) return value;
+          if (value.balance
+            && value.minter
+            && (value.salePrice || value.tierId)
+            && value.signature) return value;
           throw new Error('signedVoucher is not formatted correctly');
         },
       },

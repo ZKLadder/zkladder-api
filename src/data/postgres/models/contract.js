@@ -59,5 +59,8 @@ module.exports = (sequelize) => {
         },
       },
     },
+    minterKeyId: {
+      type: DataTypes.STRING,
+    },
   });
 };

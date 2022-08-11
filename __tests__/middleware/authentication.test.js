@@ -27,13 +27,14 @@ describe('Authentication middleware', () => {
   });
 
   test('It correctly calls next() when signature is valid', async () => {
-    hasAccess.mockReturnValue(true);
+    hasAccess.mockResolvedValueOnce({ session: true, verifiedAddress: '0x123456' });
     await authentication(
       mockReq,
       mockRes,
       mockNext,
     );
     expect(mockNext).toHaveBeenCalledWith();
+    expect(mockRes.locals.verifiedAddress).toStrictEqual('0x123456');
   });
 
   test('It correctly calls next() when x-user-signature is missing', async () => {
@@ -46,7 +47,7 @@ describe('Authentication middleware', () => {
   });
 
   test('It correctly calls next() when signature is not valid', async () => {
-    hasAccess.mockReturnValue(false);
+    hasAccess.mockResolvedValueOnce({ session: false });
     await authentication(
       mockReq,
       mockRes,
