@@ -1,71 +1,34 @@
-/* eslint-disable no-underscore-dangle, prefer-destructuring */
-
+/* eslint-disable prefer-destructuring */
 const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
-const { getTransactionSigner } = require('../services/accounts');
 const { zkl, ipfs, whiteList } = require('../config');
-const { ethToWei } = require('./conversions');
 
-let zklMemberNft;
+let zklTokenList = [];
 
-/**
- * Returns a signed mint voucher used to mint new tokens on any ZKL whitelisted NFT deployment
- * https://eips.ethereum.org/EIPS/eip-712
- * @param {*} options Signature and mint options
- * @returns Signed mint voucher
- */
-const nftWhitelistedVoucher = async (options) => {
-  const {
-    chainId,
-    contractName,
-    contractAddress,
-    wallet,
-    balance,
-    salePrice,
-    minter,
-  } = options;
+const fetchTokens = async () => {
+  const zklMemberNft = await MemberNft.setup({
+    chainId: '137',
+    address: zkl.memberNft,
+    infuraIpfsProjectId: ipfs.projectId,
+    infuraIpfsProjectSecret: ipfs.projectSecret,
+  });
 
-  const signer = wallet || getTransactionSigner(chainId);
-
-  const domain = {
-    chainId,
-    name: contractName,
-    verifyingContract: contractAddress,
-    version: '1',
-  };
-
-  const types = {
-    mintVoucher: [
-      { name: 'balance', type: 'uint256' },
-      { name: 'salePrice', type: 'uint256' },
-      { name: 'minter', type: 'address' },
-    ],
-  };
-
-  const salePriceInWei = ethToWei(salePrice);
-
-  const value = {
-    balance,
-    minter,
-    salePrice: salePriceInWei.toString(),
-  };
-
-  const signature = await signer._signTypedData(domain, types, value);
-
-  return {
-    balance,
-    minter,
-    salePrice: salePriceInWei,
-    signature,
-  };
+  zklTokenList = await zklMemberNft.getAllTokens();
 };
+
+// Fetch and cache ZKL token list every 5 minutes
+if (process.env.NODE_ENV !== 'test') {
+  fetchTokens();
+  setInterval(fetchTokens, 300000);
+}
 
 /**
  * Decodes the signature and determines if the signer has access to the API
  * @param {*} signature A b64 string encoding JSON content and a signed digest seperatd by an '_'
+ * @param {*} tokenList Optional list of tokens to use when verifiying access
  * @returns boolean indiciating if signer has access
  */
-const hasAccess = async (signature) => {
+const hasAccess = async (signature, tokenList) => {
   let content;
   let digest;
 
@@ -83,20 +46,10 @@ const hasAccess = async (signature) => {
     version: 'V4',
   });
 
-  if (!zklMemberNft) {
-    const ethersSigner = getTransactionSigner(zkl.memberNftChainId);
-    zklMemberNft = await MemberNft.setup({
-      provider: ethersSigner,
-      address: zkl.memberNft,
-      infuraIpfsProjectId: ipfs.projectId,
-      infuraIpfsProjectSecret: ipfs.projectSecret,
-    });
-  }
+  const ownedByUser = (tokenList || zklTokenList)
+    .filter((token) => (token.owner.toLowerCase() === verifiedAddress.toLowerCase()));
 
-  const totalSupply = await zklMemberNft.totalSupply();
-  const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
-
-  if (tokens.length < 1
+  if (ownedByUser.length < 1
      && !whiteList.includes(verifiedAddress.toLowerCase())) return { session: false };
 
   // Signature has expired (issued over 48 hours in the past)
@@ -107,11 +60,12 @@ const hasAccess = async (signature) => {
 
   return {
     session: true,
+    verifiedAddress,
     memberToken: {
-      totalSupply,
-      ...tokens[0],
+      totalSupply: (tokenList || zklTokenList).length,
+      ...ownedByUser[0],
     },
   };
 };
 
-module.exports = { nftWhitelistedVoucher, hasAccess };
+module.exports = { hasAccess };

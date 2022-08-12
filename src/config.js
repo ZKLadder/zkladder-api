@@ -40,4 +40,8 @@ module.exports = {
     apiKey: process.env.COVALENT_API_KEY,
     url: process.env.COVALENT_URL || 'https://api.covalenthq.com',
   },
+  kms: {
+    accessKeyId: process.env.KMS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.KMS_SECRET_ACCESS_KEY,
+  },
 };

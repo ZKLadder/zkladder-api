@@ -169,6 +169,7 @@ describe('updateContract tests', () => {
   test('Correctly calls dependencies', async () => {
     const options = {
       address: '0x1234567',
+      chainId: '137',
       projectId: '5632',
       admins: ['0x0', '0x1', '0x2'],
       extraField: 'extra',
@@ -179,12 +180,13 @@ describe('updateContract tests', () => {
     expect(mockContractModel.update).toHaveBeenCalledWith({
       projectId: '5632',
       admins: ['0x0', '0x1', '0x2'],
-    }, { where: { address: '0x1234567' } });
+    }, { where: { address: '0x1234567', chainId: '137' } });
   });
 
   test('Returns the correct response', async () => {
     const options = {
       address: '0x1234567',
+      chainId: '137',
       projectId: '5632',
       admins: ['0x0', '0x1', '0x2'],
     };
@@ -196,6 +198,7 @@ describe('updateContract tests', () => {
   test('Rethrows any errors', async () => {
     const options = {
       address: '0x1234567',
+      chainId: '137',
       projectId: '5632',
       admins: ['0x0', '0x1', '0x2'],
     };
