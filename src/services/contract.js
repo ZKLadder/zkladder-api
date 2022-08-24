@@ -69,7 +69,7 @@ const updateContract = async (options) => {
     address, chainId, projectId, admins,
   } = options;
 
-  if (!address) throw new ClientError('address is a required field');
+  if (!address || !chainId) throw new ClientError('address and chainId are required fields');
 
   const updates = {};
 

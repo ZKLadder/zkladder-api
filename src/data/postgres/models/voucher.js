@@ -24,10 +24,6 @@ module.exports = (sequelize) => {
           return value;
         },
       },
-      references: {
-        model: 'contract',
-        key: 'address',
-      },
     },
     userAddress: { // Same as minter field of signedVoucher
       type: DataTypes.STRING,
