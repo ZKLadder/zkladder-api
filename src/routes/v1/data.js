@@ -1,10 +1,10 @@
 const express = require('express');
 const { getTransactions, getAssetPrices } = require('../../services/data');
-const authentication = require('../middleware/authentication');
+// const authentication = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.get('/transactions', authentication, async (req, res, next) => {
+router.get('/transactions', async (req, res, next) => {
   try {
     const transactions = await getTransactions(req.query);
     res.send(transactions);
@@ -13,7 +13,7 @@ router.get('/transactions', authentication, async (req, res, next) => {
   }
 });
 
-router.get('/prices', authentication, async (req, res, next) => {
+router.get('/prices', async (req, res, next) => {
   try {
     const prices = await getAssetPrices(req.query);
     res.send(prices);

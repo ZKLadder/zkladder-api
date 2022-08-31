@@ -13,7 +13,7 @@ router.post('/', authentication, async (req, res, next) => {
   }
 });
 
-router.get('/', authentication, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const accessSchemas = await getAccessSchema(req.query);
     res.send(accessSchemas);

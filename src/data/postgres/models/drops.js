@@ -24,6 +24,13 @@ module.exports = (sequelize) => {
         },
       },
     },
+    tierId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING,
+    },
     startTime: {
       type: DataTypes.DATE,
       validate: {

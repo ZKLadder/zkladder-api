@@ -3,32 +3,14 @@ const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const { zkl, ipfs, whiteList } = require('../config');
 
-let zklTokenList = [];
-
-const fetchTokens = async () => {
-  const zklMemberNft = await MemberNft.setup({
-    chainId: '137',
-    address: zkl.memberNft,
-    infuraIpfsProjectId: ipfs.projectId,
-    infuraIpfsProjectSecret: ipfs.projectSecret,
-  });
-
-  zklTokenList = await zklMemberNft.getAllTokens();
-};
-
-// Fetch and cache ZKL token list every 5 minutes
-if (process.env.NODE_ENV !== 'test') {
-  fetchTokens();
-  setInterval(fetchTokens, 300000);
-}
+let zklMemberNft;
 
 /**
  * Decodes the signature and determines if the signer has access to the API
  * @param {*} signature A b64 string encoding JSON content and a signed digest seperatd by an '_'
- * @param {*} tokenList Optional list of tokens to use when verifiying access
  * @returns boolean indiciating if signer has access
  */
-const hasAccess = async (signature, tokenList) => {
+const hasAccess = async (signature) => {
   let content;
   let digest;
 
@@ -46,10 +28,19 @@ const hasAccess = async (signature, tokenList) => {
     version: 'V4',
   });
 
-  const ownedByUser = (tokenList || zklTokenList)
-    .filter((token) => (token.owner.toLowerCase() === verifiedAddress.toLowerCase()));
+  if (!zklMemberNft) {
+    zklMemberNft = await MemberNft.setup({
+      chainId: 137,
+      address: zkl.memberNft,
+      infuraIpfsProjectId: ipfs.projectId,
+      infuraIpfsProjectSecret: ipfs.projectSecret,
+    });
+  }
 
-  if (ownedByUser.length < 1
+  const totalSupply = await zklMemberNft.totalSupply();
+  const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
+
+  if (tokens.length < 1
      && !whiteList.includes(verifiedAddress.toLowerCase())) return { session: false };
 
   // Signature has expired (issued over 48 hours in the past)
@@ -62,8 +53,8 @@ const hasAccess = async (signature, tokenList) => {
     session: true,
     verifiedAddress,
     memberToken: {
-      totalSupply: (tokenList || zklTokenList).length,
-      ...ownedByUser[0],
+      totalSupply,
+      ...tokens[0],
     },
   };
 };
