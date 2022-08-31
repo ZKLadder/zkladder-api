@@ -13,7 +13,7 @@ router.post('/', authentication, async (req, res, next) => {
   }
 });
 
-router.get('/', authentication, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const contracts = await getContracts(req.query);
     res.send(contracts);

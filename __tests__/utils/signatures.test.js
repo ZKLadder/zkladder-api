@@ -1,5 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 const sigUtil = require('@metamask/eth-sig-util');
+const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
 const { hasAccess } = require('../../src/utils/signatures');
 
 const mockBuffer = jest.fn();
@@ -21,7 +22,28 @@ jest.mock('@metamask/eth-sig-util', () => ({
   recoverTypedSignature: jest.fn(),
 }));
 
+jest.mock('../../src/services/accounts', () => ({
+  getTransactionSigner: jest.fn(),
+}));
+
+jest.mock('../../src/utils/conversions', () => ({
+  ethToWei: jest.fn(() => ('mockBigNumber')),
+}));
+
+jest.mock('@zkladder/zkladder-sdk-ts', () => ({
+  MemberNft: {
+    setup: jest.fn(),
+  },
+}));
+
 describe('hasAccess', () => {
+  const totalSupply = jest.fn();
+  const getAllTokensOwnedBy = jest.fn();
+  MemberNft.setup.mockResolvedValue({
+    totalSupply,
+    getAllTokensOwnedBy,
+  });
+
   test('Correctly calls dependencies and returns true when signature is valid', async () => {
     const content = {
       message: {
@@ -34,9 +56,13 @@ describe('hasAccess', () => {
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
     mockDate.mockReturnValue(101);
 
-    const result = await hasAccess('mockSignature', [{
-      owner: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    }]);
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
+
+    expect(totalSupply).toHaveBeenCalledTimes(1);
+    expect(getAllTokensOwnedBy).toHaveBeenCalledWith('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -44,7 +70,11 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toStrictEqual({ session: true, verifiedAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', memberToken: { owner: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', totalSupply: 1 } });
+    expect(result).toStrictEqual({
+      session: true,
+      verifiedAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      memberToken: { mock: 'token', totalSupply: 10 },
+    });
   });
 
   test('Returns false when address does not hold any tokens', async () => {
@@ -58,7 +88,10 @@ describe('hasAccess', () => {
 
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xmockAddress');
 
-    const result = await hasAccess('mockSignature', []);
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -82,9 +115,10 @@ describe('hasAccess', () => {
 
     mockDate.mockReturnValue(172899000);
 
-    const result = await hasAccess('mockSignature', [{
-      owner: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    }]);
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -108,9 +142,10 @@ describe('hasAccess', () => {
 
     mockDate.mockReturnValue(100000);
 
-    const result = await hasAccess('mockSignature'[{
-      owner: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-    }]);
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([{ mock: 'token' }]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -132,7 +167,10 @@ describe('hasAccess', () => {
 
     sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
 
-    const result = await hasAccess('mockSignature', []);
+    totalSupply.mockResolvedValueOnce(10);
+    getAllTokensOwnedBy.mockResolvedValueOnce([]);
+
+    const result = await hasAccess('mockSignature');
 
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
@@ -140,6 +178,10 @@ describe('hasAccess', () => {
       version: 'V4',
     });
 
-    expect(result).toStrictEqual({ session: true, verifiedAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266', memberToken: { totalSupply: 0 } });
+    expect(result).toStrictEqual({
+      session: true,
+      verifiedAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      memberToken: { totalSupply: 10 },
+    });
   });
 });

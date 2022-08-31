@@ -15,7 +15,7 @@ router.post('/', authentication, async (req, res, next) => {
   }
 });
 
-router.get('/', authentication, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const assets = await getAssets(req.query);
     res.send(assets);

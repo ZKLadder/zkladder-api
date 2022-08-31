@@ -4,13 +4,13 @@ const { ClientError } = require('../utils/error');
 
 const createDrop = async (options) => {
   const {
-    chainId, startTime, endTime, accessSchemaId, totalTokens,
+    chainId, name, tierId, startTime, endTime, accessSchemaId, totalTokens,
   } = options;
 
   const contractAddress = options.contractAddress?.toLowerCase();
 
   const newDrop = await dropModel.create({
-    contractAddress, chainId, startTime, endTime, accessSchemaId, totalTokens,
+    contractAddress, chainId, tierId, name, startTime, endTime, accessSchemaId, totalTokens,
   });
 
   return newDrop;
@@ -45,13 +45,15 @@ const getDrops = async (options) => {
 
 const updateDrop = async (options) => {
   const {
-    id, startTime, endTime, accessSchemaId, totalTokens, isArchived,
+    id, tierId, name, startTime, endTime, accessSchemaId, totalTokens, isArchived,
   } = options;
 
   if (!id) throw new ClientError('id is a required field');
 
   const updates = {};
 
+  if (tierId) updates.tierId = tierId;
+  if (name) updates.name = name;
   if (startTime) updates.startTime = startTime;
   if (endTime) updates.endTime = endTime;
   if (accessSchemaId) updates.accessSchemaId = accessSchemaId;
