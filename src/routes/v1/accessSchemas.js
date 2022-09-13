@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.patch('/', authentication, async (req, res, next) => {
+router.patch('/', async (req, res, next) => {
   try {
     const accessSchema = await updateAccessSchema(req.body);
     res.send(accessSchema);

@@ -8,6 +8,7 @@ jest.mock('../../src/data/postgres/index', () => ({
     update: jest.fn(),
   },
   assetModel: 'mockAssetModel',
+  accessSchemaModel: 'mockAccessSchemaModel',
 }));
 
 const { dropModel: mockDropModel } = require('../../src/data/postgres/index');
@@ -82,6 +83,10 @@ describe('getDrops tests', () => {
           model: 'mockAssetModel',
           as: 'assets',
           attributes: ['id', 'dropId', 'tokenUri', 'isMinted'],
+        },
+        {
+          as: 'accessSchema',
+          model: 'mockAccessSchemaModel',
         },
       ],
       raw: false,

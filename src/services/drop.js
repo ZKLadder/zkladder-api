@@ -1,4 +1,4 @@
-const { dropModel } = require('../data/postgres/index');
+const { dropModel, accessSchemaModel } = require('../data/postgres/index');
 const { assetModel } = require('../data/postgres/index');
 const { ClientError } = require('../utils/error');
 
@@ -36,6 +36,10 @@ const getDrops = async (options) => {
       model: assetModel,
       as: 'assets',
       attributes: ['id', 'dropId', 'tokenUri', 'isMinted'],
+    },
+    {
+      model: accessSchemaModel,
+      as: 'accessSchema',
     }],
     raw: false,
   });
