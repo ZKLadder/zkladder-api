@@ -2,6 +2,7 @@ const express = require('express');
 const {
   storeVoucher, activateService, deleteVoucher, getVoucher, getAllVouchers,
 } = require('../../services/voucher');
+const { getAddress } = require('../../utils/keyManager');
 const authentication = require('../middleware/authentication');
 
 const router = express.Router();
@@ -18,8 +19,18 @@ router.post('/', authentication, async (req, res, next) => {
 router.post('/activate', authentication, async (req, res, next) => {
   try {
     const { verifiedAddress } = res.locals;
-    const voucher = await activateService({ verifiedAddress, ...req.body });
-    res.send(voucher);
+    const results = await activateService({ verifiedAddress, ...req.body });
+    res.send(results);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/address', async (req, res, next) => {
+  try {
+    const { minterKeyId } = req.query;
+    const address = await getAddress(minterKeyId);
+    res.send({ address });
   } catch (error) {
     next(error);
   }

@@ -26,6 +26,9 @@ sequelize.models.voucher.belongsTo(sequelize.models.contract, { foreignKey: 'con
 sequelize.models.drop.hasMany(sequelize.models.asset, { targetKey: 'id' });
 sequelize.models.asset.belongsTo(sequelize.models.drop, { foreignKey: 'dropId' });
 
+sequelize.models.accessSchema.hasOne(sequelize.models.drop, { targetKey: 'id' });
+sequelize.models.drop.belongsTo(sequelize.models.accessSchema, { foreignKey: 'accessSchemaId' });
+
 module.exports = {
   postgres: sequelize,
   voucherModel: sequelize.models.voucher,

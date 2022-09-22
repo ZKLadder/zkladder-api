@@ -35,7 +35,7 @@ const validateAccessSchema = (accessSchemas) => {
     if (!schema.returnValueTest) throw new Error(`Schema at index ${i} has incorrectly formatted returnValueTest`);
     if (!schema.parameters) throw new Error(`Schema at index ${i} is missing function or method params`);
     if (schema.functionName && !schema.functionAbi) throw new Error(`Schema at index ${i} has incorrectly formatted functionAbi`);
-    if (!schema.functionName && !schema.method) throw new Error(`Schema at index ${i} is missing function or method name`);
+    if (!schema.functionName && !schema.method && !schema.key) throw new Error(`Schema at index ${i} is missing function or method name`);
     return true;
   });
 
