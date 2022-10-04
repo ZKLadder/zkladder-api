@@ -1,14 +1,45 @@
-const { MemberNft, MemberNftV2 } = require('@zkladder/zkladder-sdk-ts');
+const { MemberNft, MemberNftV2, AccessValidator } = require('@zkladder/zkladder-sdk-ts');
+const sigUtil = require('@metamask/eth-sig-util');
 const {
   storeVoucher,
   deleteVoucher,
   getAllVouchers,
   getVoucher,
   activateService,
+  requestVoucher,
 } = require('../../src/services/voucher');
 const { ClientError } = require('../../src/utils/error');
 const { getAddress, signVoucher, createECDSAKey } = require('../../src/utils/keyManager');
 const { memberNftV2Voucher } = require('../../src/utils/vouchers');
+const { getDrops } = require('../../src/services/drop');
+const { getContracts } = require('../../src/services/contract');
+
+const mockBuffer = jest.fn();
+const mockDate = jest.fn();
+
+Object.defineProperty(global, 'Buffer', {
+  configurable: true,
+  writable: true,
+  value: { from: mockBuffer },
+});
+
+Object.defineProperty(global, 'Date', {
+  configurable: true,
+  writable: true,
+  value: jest.fn(),
+});
+
+jest.mock('@metamask/eth-sig-util', () => ({
+  recoverTypedSignature: jest.fn(),
+}));
+
+jest.mock('../../src/services/drop', () => ({
+  getDrops: jest.fn(),
+}));
+
+jest.mock('../../src/services/contract', () => ({
+  getContracts: jest.fn(),
+}));
 
 jest.mock('../../src/data/postgres/index', () => ({
   voucherModel: {
@@ -20,6 +51,9 @@ jest.mock('../../src/data/postgres/index', () => ({
   contractModel: {
     findOne: jest.fn(),
     update: jest.fn(),
+  },
+  postgres: {
+    transaction: jest.fn(),
   },
 }));
 
@@ -35,6 +69,7 @@ jest.mock('@zkladder/zkladder-sdk-ts', () => ({
   MemberNftV2: {
     setup: jest.fn(),
   },
+  AccessValidator: jest.fn(),
 }));
 
 jest.mock('../../src/services/accounts', () => ({
@@ -387,7 +422,7 @@ describe('getVoucher function', () => {
     );
   });
 
-  test('Throws when no voucher exists and no minterKeyId in DB', async () => {
+  test('Throws when no voucher exists', async () => {
     const contractAddress = '0xmockContract';
     const userAddress = '0xmockUser';
     const roleId = 'mockRole';
@@ -407,87 +442,187 @@ describe('getVoucher function', () => {
     await expect(getVoucher({
       contractAddress, userAddress, chainId, roleId,
     })).rejects.toThrow(
-      new Error('Voucher service is not enabled'),
-    );
-  });
-
-  test('Throws if ZKL service does not have mint permissions', async () => {
-    const contractAddress = '0xmockContract';
-    const userAddress = '0xmockUser';
-    const roleId = 'mockRole';
-    const chainId = '137';
-    const mockMemberNft = {
-      balanceOf: jest.fn(() => (Promise.resolve(0))),
-      hasRole: jest.fn(() => (Promise.resolve(false))),
-    };
-
-    mockContractModel.findOne.mockResolvedValueOnce({
-      templateId: '3', minterKeyId: 'mockAwsId',
-    });
-
-    mockVoucherModel.findAll.mockResolvedValueOnce([]);
-
-    MemberNftV2.setup.mockResolvedValue(mockMemberNft);
-
-    getAddress.mockResolvedValue('0xminterAddress');
-
-    await expect(getVoucher({
-      contractAddress, userAddress, chainId, roleId,
-    })).rejects.toThrow(
       new Error('This account is not approved to mint a token at this contract address'),
     );
+  });
+});
 
-    expect(mockMemberNft.hasRole).toHaveBeenCalledWith('MINTER_ROLE', '0xminterAddress');
+describe('Request Voucher tests', () => {
+  test('Correctly returns result', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
 
-    expect(getAddress).toHaveBeenCalledWith('mockAwsId');
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(options)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xminter');
+
+    getDrops.mockResolvedValueOnce([{
+      accessSchema: 'mockSchema',
+      startTime: 100,
+      endTime: 1000,
+      contractAddress: '0xcontracttomint',
+      chainId: 111,
+      tierId: 2,
+      assets: [
+        { id: 7, mintStatus: 'minted' },
+        {
+          id: 8, mintStatus: 'unminted', tokenId: 12345, tokenUri: 'mockTokenUri',
+        },
+        { id: 9, mintStatus: 'unminted' },
+        { id: 10, mintStatus: 'unminted' },
+        { id: 11, mintStatus: 'unminted' },
+      ],
+    }]);
+
+    getContracts.mockResolvedValueOnce([{
+      minterKeyId: 'minterKeyId',
+    }]);
+
+    const validate = jest.fn();
+    AccessValidator.mockImplementationOnce(() => ({ validate }));
+    validate.mockResolvedValueOnce(true);
+
+    const getMilliseconds = jest.fn();
+    Date.mockImplementation(() => ({ now: mockDate, getMilliseconds }));
+    Date.now = () => (500);
+    getMilliseconds.mockReturnValueOnce(1000).mockReturnValueOnce(100);
+
+    const mockName = jest.fn();
+    MemberNftV2.setup.mockResolvedValueOnce({
+      name: mockName,
+    });
+    mockName.mockResolvedValueOnce('TEST NFT');
+
+    memberNftV2Voucher.mockReturnValueOnce('here is a voucher');
+
+    signVoucher.mockResolvedValueOnce('0xsignature');
+
+    const result = await requestVoucher(options);
+
+    expect(result).toStrictEqual({
+      assetId: 8,
+      tokenUri: 'mockTokenUri',
+      voucher: {
+        tokenId: 12345,
+        tierId: 2,
+        minter: '0xminter',
+        signature: '0xsignature',
+      },
+    });
   });
 
-  test('Correctly returns result', async () => {
-    const contractAddress = '0xmockContract';
-    const userAddress = '0xmockUser';
-    const roleId = 'mockRole';
-    const chainId = '137';
-    const mockMemberNft = {
-      balanceOf: jest.fn(() => (Promise.resolve(0))),
-      hasRole: jest.fn(() => (Promise.resolve(true))),
-      name: jest.fn(() => (Promise.resolve('mock name'))),
-    };
+  test('Throws when signature is missing', async () => {
+    const options = { dropId: 111 };
 
-    mockContractModel.findOne.mockResolvedValueOnce({
-      templateId: '3', minterKeyId: 'mockAwsId',
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('Missing required x-user-signature header'));
+  });
+
+  test('Throws when signature is malformed', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
+
+    mockBuffer.mockReturnValueOnce('notvaliddata_0x123456789');
+
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('Signature malformed'));
+  });
+
+  test('Throws when dropId not found', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(options)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xminter');
+
+    getDrops.mockResolvedValueOnce([]);
+
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('Unknown dropId'));
+  });
+
+  test('Throws when user not eligible', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(options)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xminter');
+
+    getDrops.mockResolvedValueOnce([{
+      accessSchema: 'mockSchema',
+      startTime: 100,
+      endTime: 1000,
+      contractAddress: '0xcontracttomint',
+      chainId: 111,
+      tierId: 2,
+      assets: [
+        { id: 7, mintStatus: 'minted' },
+        {
+          id: 8, mintStatus: 'unminted', tokenId: 12345, tokenUri: 'mockTokenUri',
+        },
+        { id: 9, mintStatus: 'unminted' },
+        { id: 10, mintStatus: 'unminted' },
+        { id: 11, mintStatus: 'unminted' },
+      ],
+    }]);
+
+    getContracts.mockResolvedValueOnce([{
+      minterKeyId: 'minterKeyId',
+    }]);
+
+    const validate = jest.fn();
+    AccessValidator.mockImplementationOnce(() => ({ validate }));
+    validate.mockResolvedValueOnce(false);
+
+    const getMilliseconds = jest.fn();
+    Date.mockImplementation(() => ({ now: mockDate, getMilliseconds }));
+    Date.now = () => (500);
+    getMilliseconds.mockReturnValueOnce(1000).mockReturnValueOnce(100);
+
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('You are not eligible to mint'));
+  });
+
+  test('Throws when no more tokens are available', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(options)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xminter');
+
+    getDrops.mockResolvedValueOnce([{
+      accessSchema: 'mockSchema',
+      startTime: 100,
+      endTime: 1000,
+      contractAddress: '0xcontracttomint',
+      chainId: 111,
+      tierId: 2,
+      assets: [],
+    }]);
+
+    getContracts.mockResolvedValueOnce([{
+      minterKeyId: 'minterKeyId',
+    }]);
+
+    const validate = jest.fn();
+    AccessValidator.mockImplementationOnce(() => ({ validate }));
+    validate.mockResolvedValueOnce(true);
+
+    const getMilliseconds = jest.fn();
+    Date.mockImplementation(() => ({ now: mockDate, getMilliseconds }));
+    Date.now = () => (500);
+    getMilliseconds.mockReturnValueOnce(1000).mockReturnValueOnce(100);
+
+    const mockName = jest.fn();
+    MemberNftV2.setup.mockResolvedValueOnce({
+      name: mockName,
     });
+    mockName.mockResolvedValueOnce('TEST NFT');
 
-    mockVoucherModel.findAll.mockResolvedValueOnce([]);
-
-    MemberNftV2.setup.mockResolvedValue(mockMemberNft);
-
-    getAddress.mockResolvedValue('0xminterAddress');
-
-    memberNftV2Voucher.mockReturnValue('mockVoucher');
-
-    signVoucher.mockResolvedValue('SIGNATURE');
-
-    const result = await getVoucher({
-      contractAddress, userAddress, chainId, roleId,
-    });
-
-    expect(mockMemberNft.hasRole).toHaveBeenCalledWith('MINTER_ROLE', '0xminterAddress');
-    expect(getAddress).toHaveBeenCalledWith('mockAwsId');
-    expect(mockMemberNft.name).toHaveBeenCalled();
-    expect(memberNftV2Voucher).toHaveBeenCalledWith({
-      chainId,
-      contractName: 'mock name',
-      contractAddress,
-      balance: 1,
-      tierId: roleId,
-      minter: userAddress,
-    });
-    expect(signVoucher).toHaveBeenCalledWith('mockAwsId', 'mockVoucher');
-    expect(result).toStrictEqual({
-      balance: 1,
-      tierId: roleId,
-      minter: userAddress,
-      signature: 'SIGNATURE',
-    });
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('All tokens are minted'));
   });
 });

@@ -1,6 +1,5 @@
 const express = require('express');
 const { getTransactions, getAssetPrices } = require('../../services/data');
-// const authentication = require('../middleware/authentication');
 
 const router = express.Router();
 

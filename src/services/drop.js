@@ -35,7 +35,7 @@ const getDrops = async (options) => {
     include: [{
       model: assetModel,
       as: 'assets',
-      attributes: ['id', 'dropId', 'tokenUri', 'isMinted'],
+      attributes: ['id', 'dropId', 'tokenUri', 'mintStatus', 'tokenId'],
     },
     {
       model: accessSchemaModel,
@@ -45,6 +45,19 @@ const getDrops = async (options) => {
   });
 
   return drops;
+};
+
+const getDrop = async (id) => {
+  const {
+    contractAddress, chainId, tierId, name, startTime, endTime,
+  } = await dropModel.findOne({
+    where: { id },
+    raw: true,
+  });
+
+  return {
+    contractAddress, chainId, tierId, name, startTime, endTime,
+  };
 };
 
 const updateDrop = async (options) => {
@@ -70,4 +83,6 @@ const updateDrop = async (options) => {
   return { success: true };
 };
 
-module.exports = { createDrop, getDrops, updateDrop };
+module.exports = {
+  createDrop, getDrops, getDrop, updateDrop,
+};

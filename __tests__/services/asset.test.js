@@ -2,6 +2,8 @@ const {
   createAssets, getAssets, updateAsset, deleteAssets,
 } = require('../../src/services/asset');
 
+const { uid } = require('../../src/utils/conversions');
+
 jest.mock('../../src/data/postgres/index', () => ({
   assetModel: {
     bulkCreate: jest.fn(),
@@ -12,11 +14,18 @@ jest.mock('../../src/data/postgres/index', () => ({
   },
 }));
 
+jest.mock('../../src/utils/conversions', () => ({
+  uid: jest.fn(),
+}));
+
 const { assetModel: mockAssetModel } = require('../../src/data/postgres/index');
 
 describe('createAsset tests', () => {
   test('Correctly calls dependencies', async () => {
+    uid.mockReturnValue('tokenid');
     const options = {
+      chainId: 111,
+      contractAddress: '0xUPPERCASE',
       assets: [
         { dropId: '1', tokenUri: 'mock1' },
         { dropId: '2', tokenUri: 'mock2' },
@@ -29,10 +38,18 @@ describe('createAsset tests', () => {
 
     expect(mockAssetModel.bulkCreate).toHaveBeenCalledWith(
       [
-        { dropId: '1', tokenUri: 'mock1' },
-        { dropId: '2', tokenUri: 'mock2' },
-        { dropId: '3', tokenUri: 'mock3' },
-        { dropId: '4', tokenUri: 'mock4' },
+        {
+          dropId: '1', tokenUri: 'mock1', chainId: 111, contractAddress: '0xuppercase', tokenId: 'tokenid',
+        },
+        {
+          dropId: '2', tokenUri: 'mock2', chainId: 111, contractAddress: '0xuppercase', tokenId: 'tokenid',
+        },
+        {
+          dropId: '3', tokenUri: 'mock3', chainId: 111, contractAddress: '0xuppercase', tokenId: 'tokenid',
+        },
+        {
+          dropId: '4', tokenUri: 'mock4', chainId: 111, contractAddress: '0xuppercase', tokenId: 'tokenid',
+        },
       ],
       { validate: true },
     );
@@ -40,6 +57,8 @@ describe('createAsset tests', () => {
 
   test('Returns the correct response', async () => {
     const options = {
+      chainId: 111,
+      contractAddress: '0xUPPERCASE',
       assets: [
         { dropId: '1', tokenUri: 'mock1' },
         { dropId: '2', tokenUri: 'mock2' },
@@ -50,11 +69,13 @@ describe('createAsset tests', () => {
 
     mockAssetModel.bulkCreate.mockResolvedValue('test123');
     const result = await createAssets(options);
-    expect(result).toStrictEqual('test123');
+    expect(result).toStrictEqual({ assets: 'test123' });
   });
 
   test('Rethrows any errors', async () => {
     const options = {
+      chainId: 111,
+      contractAddress: '0xUPPERCASE',
       assets: [
         { dropId: '1', tokenUri: 'mock1' },
         { dropId: '2', tokenUri: 'mock2' },
@@ -90,11 +111,20 @@ describe('getAssets tests', () => {
       raw: true,
     });
 
-    await getAssets({ dropId: '123', isMinted: false });
+    await getAssets({ dropId: '123', mintStatus: 'unminted' });
     expect(mockAssetModel.findAll).toHaveBeenCalledWith({
       where: {
         dropId: '123',
-        isMinted: false,
+        mintStatus: 'unminted',
+      },
+      raw: true,
+    });
+
+    await getAssets({ contractAddress: '0x12345', chainId: 111 });
+    expect(mockAssetModel.findAll).toHaveBeenCalledWith({
+      where: {
+        contractAddress: '0x12345',
+        chainId: 111,
       },
       raw: true,
     });
@@ -134,21 +164,21 @@ describe('updateAsset tests', () => {
   test('Correctly calls dependencies', async () => {
     const options = {
       id: '0x1234567',
-      isMinted: true,
+      mintStatus: 'minted',
       extraField: 'field',
     };
 
     await updateAsset(options);
 
     expect(mockAssetModel.update).toHaveBeenCalledWith({
-      isMinted: true,
+      mintStatus: 'minted',
     }, { where: { id: '0x1234567' } });
   });
 
   test('Returns the correct response', async () => {
     const options = {
       id: '0x1234567',
-      isMinted: true,
+      mintStatus: 'minted',
       extraField: 'field',
     };
     mockAssetModel.update.mockResolvedValue('test123');
@@ -159,7 +189,7 @@ describe('updateAsset tests', () => {
   test('Rethrows any errors', async () => {
     const options = {
       id: '0x1234567',
-      isMinted: true,
+      mintStatus: 'minted',
       extraField: 'field',
     };
     const mockError = new Error('test123');

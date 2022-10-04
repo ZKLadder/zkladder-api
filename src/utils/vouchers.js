@@ -62,7 +62,7 @@ const memberNftV2Voucher = (options) => {
     chainId,
     contractName,
     contractAddress,
-    balance,
+    tokenId,
     tierId,
     minter,
   } = options;
@@ -76,14 +76,14 @@ const memberNftV2Voucher = (options) => {
 
   const types = {
     mintVoucher: [
-      { name: 'balance', type: 'uint256' },
-      { name: 'tierId', type: 'uint256' },
+      { name: 'tokenId', type: 'uint256' },
+      { name: 'tierId', type: 'uint32' },
       { name: 'minter', type: 'address' },
     ],
   };
 
   const value = {
-    balance,
+    tokenId,
     tierId,
     minter,
   };

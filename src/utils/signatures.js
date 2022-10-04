@@ -1,9 +1,7 @@
 /* eslint-disable prefer-destructuring */
 const sigUtil = require('@metamask/eth-sig-util');
-const { MemberNft } = require('@zkladder/zkladder-sdk-ts');
+const { MemberNft, MemberNftV2 } = require('@zkladder/zkladder-sdk-ts');
 const { zkl, ipfs, whiteList } = require('../config');
-
-let zklMemberNft;
 
 /**
  * Decodes the signature and determines if the signer has access to the API
@@ -28,14 +26,12 @@ const hasAccess = async (signature) => {
     version: 'V4',
   });
 
-  if (!zklMemberNft) {
-    zklMemberNft = await MemberNft.setup({
-      chainId: 137,
-      address: zkl.memberNft,
-      infuraIpfsProjectId: ipfs.projectId,
-      infuraIpfsProjectSecret: ipfs.projectSecret,
-    });
-  }
+  const zklMemberNft = await MemberNft.setup({
+    chainId: 137,
+    address: zkl.memberNft,
+    infuraIpfsProjectId: ipfs.projectId,
+    infuraIpfsProjectSecret: ipfs.projectSecret,
+  });
 
   const totalSupply = await zklMemberNft.totalSupply();
   const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
@@ -59,4 +55,43 @@ const hasAccess = async (signature) => {
   };
 };
 
-module.exports = { hasAccess };
+const hasAdminRole = async (signature, contractAddress, chainId) => {
+  let content;
+  let digest;
+
+  try {
+    const decodedSignature = Buffer.from(signature, 'base64').toString('ascii').split('_');
+    content = JSON.parse(decodedSignature[0]);
+    digest = decodedSignature[1];
+  } catch (err) {
+    return { admin: false };
+  }
+
+  const verifiedAddress = sigUtil.recoverTypedSignature({
+    data: content,
+    signature: digest,
+    version: 'V4',
+  });
+
+  const memberNft = await MemberNftV2.setup({
+    chainId,
+    address: contractAddress,
+    infuraIpfsProjectId: ipfs.projectId,
+    infuraIpfsProjectSecret: ipfs.projectSecret,
+  });
+
+  const isAdmin = await memberNft.hasRole('DEFAULT_ADMIN_ROLE', verifiedAddress);
+
+  // Signature has expired (issued over 48 hours in the past)
+  if (Date.now() > (content.message.timestamp + 172800000)) return { admin: false };
+
+  // Signature issued in the future
+  if ((Date.now() + 10000) < content.message.timestamp) return { admin: false };
+
+  return {
+    admin: isAdmin,
+    verifiedAddress,
+  };
+};
+
+module.exports = { hasAccess, hasAdminRole };

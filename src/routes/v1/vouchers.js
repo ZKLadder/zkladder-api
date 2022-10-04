@@ -1,13 +1,13 @@
 const express = require('express');
 const {
-  storeVoucher, activateService, deleteVoucher, getVoucher, getAllVouchers,
+  storeVoucher, activateService, deleteVoucher, getVoucher, getAllVouchers, requestVoucher,
 } = require('../../services/voucher');
 const { getAddress } = require('../../utils/keyManager');
-const authentication = require('../middleware/authentication');
+const { isZklMember } = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.post('/', authentication, async (req, res, next) => {
+router.post('/', isZklMember, async (req, res, next) => {
   try {
     const voucher = await storeVoucher(req.body);
     res.send(voucher);
@@ -16,7 +16,7 @@ router.post('/', authentication, async (req, res, next) => {
   }
 });
 
-router.post('/activate', authentication, async (req, res, next) => {
+router.post('/activate', isZklMember, async (req, res, next) => {
   try {
     const { verifiedAddress } = res.locals;
     const results = await activateService({ verifiedAddress, ...req.body });
@@ -36,7 +36,7 @@ router.get('/address', async (req, res, next) => {
   }
 });
 
-router.delete('/', authentication, async (req, res, next) => {
+router.delete('/', isZklMember, async (req, res, next) => {
   try {
     const result = await deleteVoucher(req.body);
     res.send(result);
@@ -57,6 +57,16 @@ router.get('/', async (req, res, next) => {
 router.get('/all', async (req, res, next) => {
   try {
     const voucher = await getAllVouchers(req.query);
+    res.send(voucher);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/request', async (req, res, next) => {
+  try {
+    const signature = req.cookies?.['user-signature'] || req.headers['x-user-signature'];
+    const voucher = await requestVoucher({ signature, ...req.query });
     res.send(voucher);
   } catch (error) {
     next(error);

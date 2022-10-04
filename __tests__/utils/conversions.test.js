@@ -1,9 +1,15 @@
 const { BigNumber } = require('ethers');
+const { v4: uuidv4 } = require('uuid');
 const {
   weiToEth,
   gweiToEth,
   ethToWei,
+  uid,
 } = require('../../src/utils/conversions');
+
+jest.mock('uuid', () => ({
+  v4: jest.fn(),
+}));
 
 describe('weiToEth', () => {
   test('weiToEth correctly converts values', () => {
@@ -71,5 +77,18 @@ describe('ethToWei', () => {
     expect(ethToWei(1.5)).toStrictEqual(BigNumber.from(15).mul(pow17));
     expect(ethToWei(1)).toStrictEqual(BigNumber.from(1).mul(pow18));
     expect(ethToWei(0.5)).toStrictEqual(BigNumber.from(5).mul(pow17));
+  });
+});
+
+describe('uid', () => {
+  test('uid returns correct value', () => {
+    // precomputed
+    uuidv4.mockReturnValueOnce('7654321')
+      .mockReturnValueOnce('1234567')
+      .mockReturnValueOnce('auniquestring');
+
+    expect(uid()).toStrictEqual(1130384588);
+    expect(uid()).toStrictEqual(2018166324);
+    expect(uid()).toStrictEqual(1509719549);
   });
 });

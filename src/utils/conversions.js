@@ -1,4 +1,5 @@
 const { BigNumber, utils } = require('ethers');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Accepts an Ethers.js BigNumber or string amount in Wei
@@ -45,4 +46,20 @@ const gweiToEth = (gweiAmount) => {
  */
 const ethToWei = (ethAmount) => utils.parseUnits(ethAmount.toString());
 
-module.exports = { weiToEth, gweiToEth, ethToWei };
+/* eslint-disable no-bitwise */
+const uid = () => {
+  const uniqueId = uuidv4();
+
+  let hash = 0;
+
+  for (let i = 0; i < uniqueId.length; i += 1) {
+    const char = uniqueId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash &= hash;
+  }
+  return Math.abs(hash);
+};
+
+module.exports = {
+  weiToEth, gweiToEth, ethToWei, uid,
+};

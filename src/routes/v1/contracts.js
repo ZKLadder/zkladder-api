@@ -1,10 +1,10 @@
 const express = require('express');
 const { createContract, getContracts, updateContract } = require('../../services/contract');
-const authentication = require('../middleware/authentication');
+const { isZklMember } = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.post('/', authentication, async (req, res, next) => {
+router.post('/', isZklMember, async (req, res, next) => {
   try {
     const contract = await createContract(req.body);
     res.send(contract);
@@ -22,7 +22,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.patch('/', authentication, async (req, res, next) => {
+router.patch('/', isZklMember, async (req, res, next) => {
   try {
     const contracts = await updateContract(req.body);
     res.send(contracts);

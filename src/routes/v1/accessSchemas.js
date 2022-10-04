@@ -1,10 +1,10 @@
 const express = require('express');
 const { createAccessSchema, getAccessSchema, updateAccessSchema } = require('../../services/accessSchemas');
-const authentication = require('../middleware/authentication');
+const { isZklMember } = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.post('/', authentication, async (req, res, next) => {
+router.post('/', isZklMember, async (req, res, next) => {
   try {
     const accessSchema = await createAccessSchema(req.body);
     res.send(accessSchema);

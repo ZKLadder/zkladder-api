@@ -77,7 +77,7 @@ describe('memberNftV2Voucher', () => {
       chainId: '137',
       contractName: 'mock name',
       contractAddress: '0x12345678',
-      balance: 1,
+      tokenId: 1,
       tierId: 2,
       minter: '0xmockuser',
     });
@@ -91,13 +91,13 @@ describe('memberNftV2Voucher', () => {
       },
       types: {
         mintVoucher: [
-          { name: 'balance', type: 'uint256' },
-          { name: 'tierId', type: 'uint256' },
+          { name: 'tokenId', type: 'uint256' },
+          { name: 'tierId', type: 'uint32' },
           { name: 'minter', type: 'address' },
         ],
       },
       value: {
-        balance: 1,
+        tokenId: 1,
         tierId: 2,
         minter: '0xmockuser',
       },
