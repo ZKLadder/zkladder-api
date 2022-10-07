@@ -1,19 +1,27 @@
 const { assetModel } = require('../data/postgres/index');
 const { ClientError } = require('../utils/error');
+const { uid } = require('../utils/conversions');
 
 const createAssets = async (options) => {
   const {
-    assets,
+    chainId, contractAddress,
   } = options;
+
+  const assets = options?.assets.map((asset) => ({
+    chainId,
+    contractAddress: contractAddress.toLowerCase(),
+    tokenId: uid(),
+    ...asset,
+  }));
 
   const newAssets = await assetModel.bulkCreate([...assets], { validate: true });
 
-  return newAssets;
+  return { assets: newAssets };
 };
 
 const getAssets = async (options) => {
   const {
-    id, dropId, isMinted,
+    id, dropId, mintStatus, contractAddress, chainId,
   } = options;
 
   let where = {};
@@ -22,8 +30,13 @@ const getAssets = async (options) => {
     where.dropId = dropId;
   }
 
-  if (isMinted?.toString()) {
-    where.isMinted = isMinted;
+  if (mintStatus) {
+    where.mintStatus = mintStatus;
+  }
+
+  if (contractAddress && chainId) {
+    where.contractAddress = contractAddress.toLowerCase();
+    where.chainId = chainId;
   }
 
   if (id) {
@@ -54,14 +67,14 @@ const deleteAssets = async (options) => {
 
 const updateAsset = async (options) => {
   const {
-    id, isMinted,
+    id, mintStatus,
   } = options;
 
   if (!id) throw new ClientError('id is a required field');
 
   const updates = {};
 
-  if (isMinted) updates.isMinted = isMinted;
+  if (mintStatus) updates.mintStatus = mintStatus;
 
   await assetModel.update(updates,
     { where: { id } });

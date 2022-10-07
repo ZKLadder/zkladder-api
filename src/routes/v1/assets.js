@@ -2,11 +2,11 @@ const express = require('express');
 const {
   createAssets, getAssets, deleteAssets, updateAsset,
 } = require('../../services/asset');
-const authentication = require('../middleware/authentication');
+const { isContractAdmin } = require('../middleware/authentication');
 
 const router = express.Router();
 
-router.post('/', authentication, async (req, res, next) => {
+router.post('/', isContractAdmin, async (req, res, next) => {
   try {
     const assets = await createAssets(req.body);
     res.send(assets);
@@ -15,7 +15,7 @@ router.post('/', authentication, async (req, res, next) => {
   }
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/', isContractAdmin, async (req, res, next) => {
   try {
     const assets = await getAssets(req.query);
     res.send(assets);
@@ -24,7 +24,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.delete('/', authentication, async (req, res, next) => {
+router.delete('/', isContractAdmin, async (req, res, next) => {
   try {
     await deleteAssets(req.body);
     res.send({ success: true });
@@ -33,7 +33,8 @@ router.delete('/', authentication, async (req, res, next) => {
   }
 });
 
-router.patch('/', authentication, async (req, res, next) => {
+// Public endpoint reports mint failure/success
+router.patch('/', async (req, res, next) => {
   try {
     const result = await updateAsset(req.body);
     res.send(result);

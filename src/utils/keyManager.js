@@ -5,7 +5,7 @@ const {
 const asn1 = require('asn1.js');
 const { utils, BigNumber } = require('ethers');
 const config = require('../config');
-const { kmsPolicy, secp256k1N } = require('../data/constants/awsKms');
+const { keyPolicy, secp256k1N } = require('../data/constants/awsKms');
 
 const ecdsaPublicKey = asn1.define('EcdsaPubKey', function decode() {
   // parse according to https://tools.ietf.org/html/rfc5480#section-2
@@ -38,7 +38,7 @@ const createECDSAKey = async () => {
   const createKeyCommand = new CreateKeyCommand({
     KeySpec: 'ECC_SECG_P256K1',
     KeyUsage: 'SIGN_VERIFY',
-    Policy: kmsPolicy,
+    Policy: keyPolicy,
   });
 
   const { KeyMetadata } = await kmsClient.send(createKeyCommand);

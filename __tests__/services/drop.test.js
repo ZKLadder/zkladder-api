@@ -1,4 +1,6 @@
-const { createDrop, getDrops, updateDrop } = require('../../src/services/drop');
+const {
+  createDrop, getDrops, updateDrop, getDrop,
+} = require('../../src/services/drop');
 
 jest.mock('../../src/data/postgres/index', () => ({
   dropModel: {
@@ -6,6 +8,7 @@ jest.mock('../../src/data/postgres/index', () => ({
     findAll: jest.fn(),
     where: jest.fn(),
     update: jest.fn(),
+    findOne: jest.fn(),
   },
   assetModel: 'mockAssetModel',
   accessSchemaModel: 'mockAccessSchemaModel',
@@ -82,7 +85,7 @@ describe('getDrops tests', () => {
         {
           model: 'mockAssetModel',
           as: 'assets',
-          attributes: ['id', 'dropId', 'tokenUri', 'isMinted'],
+          attributes: ['id', 'dropId', 'tokenUri', 'mintStatus', 'tokenId'],
         },
         {
           as: 'accessSchema',
@@ -144,6 +147,62 @@ describe('getDrops tests', () => {
     const mockError = 'test123';
     mockDropModel.findAll.mockRejectedValue(new Error(mockError));
     await expect(getDrops(options)).rejects.toEqual(new Error(mockError));
+  });
+});
+
+describe('getDrop tests', () => {
+  test('Calls model with correct parameters', async () => {
+    mockDropModel.findOne.mockResolvedValue(
+      {
+        contractAddress: '0x12345',
+        chainId: 111,
+        tierId: 333,
+        name: 'mockNFT',
+        startTime: 12345,
+        endTime: 54321,
+        extraField: 1,
+        extraField2: 2,
+      },
+    );
+
+    await getDrop(123);
+
+    expect(mockDropModel.findOne).toHaveBeenCalledWith({
+      where: { id: 123 },
+      raw: true,
+    });
+  });
+
+  test('Returns the correct response', async () => {
+    mockDropModel.findOne.mockResolvedValue(
+      {
+        contractAddress: '0x12345',
+        chainId: 111,
+        tierId: 333,
+        name: 'mockNFT',
+        startTime: 12345,
+        endTime: 54321,
+        extraField: 1,
+        extraField2: 2,
+      },
+    );
+
+    const result = await getDrop('5');
+
+    expect(result).toStrictEqual({
+      contractAddress: '0x12345',
+      chainId: 111,
+      tierId: 333,
+      name: 'mockNFT',
+      startTime: 12345,
+      endTime: 54321,
+    });
+  });
+
+  test('Rethrows any errors', async () => {
+    const mockError = 'test123';
+    mockDropModel.findOne.mockRejectedValue(new Error(mockError));
+    await expect(getDrop('5')).rejects.toEqual(new Error(mockError));
   });
 });
 

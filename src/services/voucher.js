@@ -1,9 +1,16 @@
-const { MemberNft, MemberNftV2 } = require('@zkladder/zkladder-sdk-ts');
-const { voucherModel, contractModel } = require('../data/postgres/index');
+/* eslint-disable prefer-destructuring */
+const { MemberNft, MemberNftV2, AccessValidator } = require('@zkladder/zkladder-sdk-ts');
+const sigUtil = require('@metamask/eth-sig-util');
+const Sequelize = require('sequelize');
+const {
+  voucherModel, contractModel, assetModel, postgres,
+} = require('../data/postgres/index');
 const { ClientError } = require('../utils/error');
 const { memberNftV2Voucher } = require('../utils/vouchers');
 const { ipfs } = require('../config');
 const { createECDSAKey, getAddress, signVoucher } = require('../utils/keyManager');
+const { getDrops } = require('./drop');
+const { getContracts } = require('./contract');
 
 /**
  * Generates a new signer address unique to the contract in AWS KMS
@@ -155,7 +162,7 @@ const getVoucher = async (options) => {
     userAddress, contractAddress, chainId, roleId,
   } = options;
 
-  const { templateId, minterKeyId } = await contractModel.findOne({
+  const { templateId } = await contractModel.findOne({
     where: { address: contractAddress.toLowerCase(), chainId },
   });
 
@@ -185,36 +192,94 @@ const getVoucher = async (options) => {
     return vouchers.sort((voucherA, voucherB) => voucherB.balance - voucherA.balance)[0];
   }
 
-  // Detects if automint is enabled (only supported on V2 contracts)
-  if (!minterKeyId || templateId !== '3') throw new ClientError('Voucher service is not enabled');
+  throw new ClientError('This account is not approved to mint a token at this contract address');
+};
 
-  const minterAddress = await getAddress(minterKeyId);
+const requestVoucher = async (options) => {
+  const { signature, dropId } = options;
 
-  const autoMintEnabled = await memberNft.hasRole(
-    'MINTER_ROLE',
-    minterAddress,
+  if (!signature) throw new ClientError('Missing required x-user-signature header');
+
+  let content;
+  let digest;
+
+  try {
+    const decodedSignature = Buffer.from(signature, 'base64').toString('ascii').split('_');
+    content = JSON.parse(decodedSignature[0]);
+    digest = decodedSignature[1];
+  } catch (err) {
+    throw new ClientError('Signature malformed');
+  }
+
+  const verifiedAddress = sigUtil.recoverTypedSignature({
+    data: content,
+    signature: digest,
+    version: 'V4',
+  });
+
+  const [drop] = await getDrops({ id: dropId });
+
+  if (!drop) throw new ClientError('Unknown dropId');
+
+  const {
+    accessSchema, startTime, endTime, assets, contractAddress, chainId, tierId,
+  } = drop;
+
+  const [contract] = await getContracts({ chainId, contractAddress });
+
+  const accessValidator = new AccessValidator(accessSchema?.accessSchema);
+
+  const qualifies = (await accessValidator.validate(verifiedAddress))
+ && (!endTime || Date.now() < new Date(endTime).getMilliseconds())
+ && (!startTime || Date.now() > new Date(startTime).getMilliseconds());
+
+  if (!qualifies) throw new ClientError('You are not eligible to mint');
+
+  const nextAsset = assets.filter(
+    (asset) => (asset.mintStatus === 'unminted'),
+  ).sort((asset1, asset2) => (asset1.id - asset2.id))[0];
+
+  if (!nextAsset) throw new ClientError('All tokens are minted');
+
+  await postgres.transaction(
+    { isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE },
+    async () => {
+      await assetModel.update({ mintStatus: 'minting' },
+        {
+          where: { id: nextAsset.id },
+        });
+    },
   );
 
-  if (!autoMintEnabled) throw new ClientError('This account is not approved to mint a token at this contract address');
+  const memberNft = await MemberNftV2.setup({
+    chainId,
+    address: contractAddress,
+    infuraIpfsProjectId: ipfs.projectId,
+    infuraIpfsProjectSecret: ipfs.projectSecret,
+  });
 
   const contractName = await memberNft.name();
 
-  const voucher = await memberNftV2Voucher({
+  const voucher = memberNftV2Voucher({
     chainId,
     contractName,
     contractAddress,
-    balance: minterBalance + 1,
-    tierId: roleId,
-    minter: userAddress,
+    tokenId: nextAsset.tokenId,
+    tierId,
+    minter: verifiedAddress,
   });
 
-  const signature = await signVoucher(minterKeyId, voucher);
+  const signedVoucher = await signVoucher(contract.minterKeyId, voucher);
 
   return {
-    balance: minterBalance + 1,
-    tierId: roleId,
-    minter: userAddress,
-    signature,
+    assetId: nextAsset.id,
+    tokenUri: nextAsset.tokenUri,
+    voucher: {
+      tokenId: nextAsset.tokenId,
+      tierId,
+      minter: verifiedAddress,
+      signature: signedVoucher,
+    },
   };
 };
 
@@ -224,4 +289,5 @@ module.exports = {
   deleteVoucher,
   getAllVouchers,
   getVoucher,
+  requestVoucher,
 };
