@@ -3,6 +3,7 @@ const sigUtil = require('@metamask/eth-sig-util');
 const { MemberNft, MemberNftV2 } = require('@zkladder/zkladder-sdk-ts');
 const { zkl, ipfs, whiteList } = require('../config');
 
+let zklMemberNft;
 /**
  * Decodes the signature and determines if the signer has access to the API
  * @param {*} signature A b64 string encoding JSON content and a signed digest seperatd by an '_'
@@ -26,12 +27,14 @@ const hasAccess = async (signature) => {
     version: 'V4',
   });
 
-  const zklMemberNft = await MemberNft.setup({
-    chainId: 137,
-    address: zkl.memberNft,
-    infuraIpfsProjectId: ipfs.projectId,
-    infuraIpfsProjectSecret: ipfs.projectSecret,
-  });
+  if (!zklMemberNft) {
+    zklMemberNft = await MemberNft.setup({
+      chainId: 137,
+      address: zkl.memberNft,
+      infuraIpfsProjectId: ipfs.projectId,
+      infuraIpfsProjectSecret: ipfs.projectSecret,
+    });
+  }
 
   const totalSupply = await zklMemberNft.totalSupply();
   const tokens = await zklMemberNft.getAllTokensOwnedBy(verifiedAddress);
