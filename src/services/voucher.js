@@ -40,7 +40,7 @@ const activateService = async (options) => {
   // Return existing minter address if one already exists for this contract
   if (minterKeyId) {
     const address = await getAddress(minterKeyId);
-    return { success: true, address };
+    return { success: true, address, minterKeyId };
   }
 
   const { keyId } = await createECDSAKey();
@@ -50,7 +50,7 @@ const activateService = async (options) => {
 
   const address = await getAddress(keyId);
 
-  return { success: true, address };
+  return { success: true, address, minterKeyId: keyId };
 };
 
 /**

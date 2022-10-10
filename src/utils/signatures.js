@@ -76,6 +76,14 @@ const hasAdminRole = async (signature, contractAddress, chainId) => {
     version: 'V4',
   });
 
+  // Testing a contract running locally
+  if (chainId.toString() === '31337') {
+    return {
+      admin: true,
+      verifiedAddress,
+    };
+  }
+
   const memberNft = await MemberNftV2.setup({
     chainId,
     address: contractAddress,

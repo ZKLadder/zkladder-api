@@ -65,7 +65,7 @@ router.get('/all', async (req, res, next) => {
 
 router.get('/request', async (req, res, next) => {
   try {
-    const signature = req.cookies?.['user-signature'] || req.headers['x-user-signature'];
+    const signature = req.headers['x-user-identity'];
     const voucher = await requestVoucher({ signature, ...req.query });
     res.send(voucher);
   } catch (error) {
