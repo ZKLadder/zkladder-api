@@ -45,6 +45,36 @@ describe('hasAdminRole', () => {
     hasRole,
   });
 
+  test('Returns true when testing a local contract (chainId === 31337)', async () => {
+    const content = {
+      message: {
+        timestamp: 100,
+      },
+    };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(content)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+    mockDate.mockReturnValue(101);
+
+    const result = await hasAdminRole('mockSignature', '0x12345', '31337');
+
+    expect(hasRole).toHaveBeenCalledWith('DEFAULT_ADMIN_ROLE', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+
+    expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
+      data: content,
+      signature: '0x123456789',
+      version: 'V4',
+    });
+
+    expect(hasRole).not.toHaveBeenCalled();
+
+    expect(result).toStrictEqual({
+      admin: true,
+      verifiedAddress: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    });
+  });
+
   test('Correctly calls dependencies and returns true when signature is valid', async () => {
     const content = {
       message: {
