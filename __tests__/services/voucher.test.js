@@ -113,6 +113,7 @@ describe('activateService service', () => {
     expect(result).toStrictEqual({
       success: true,
       address: '0xmockminter',
+      minterKeyId: 'awsKeyId',
     });
 
     expect(mockMemberNft.hasRole).toHaveBeenCalledWith('DEFAULT_ADMIN_ROLE', '0xverifiedAddres');
@@ -143,6 +144,7 @@ describe('activateService service', () => {
     expect(result).toStrictEqual({
       success: true,
       address: '0xmockminterNew',
+      minterKeyId: 'awsKeyIdNew',
     });
 
     expect(mockMemberNft.hasRole).toHaveBeenCalledWith('DEFAULT_ADMIN_ROLE', '0xverifiedAddress');

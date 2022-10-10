@@ -59,8 +59,6 @@ describe('hasAdminRole', () => {
 
     const result = await hasAdminRole('mockSignature', '0x12345', '31337');
 
-    expect(hasRole).toHaveBeenCalledWith('DEFAULT_ADMIN_ROLE', '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
-
     expect(sigUtil.recoverTypedSignature).toHaveBeenCalledWith({
       data: content,
       signature: '0x123456789',
