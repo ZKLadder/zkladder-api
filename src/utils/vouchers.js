@@ -65,6 +65,7 @@ const memberNftV2Voucher = (options) => {
     tokenId,
     tierId,
     minter,
+    tokenUri,
   } = options;
 
   const domain = {
@@ -79,6 +80,7 @@ const memberNftV2Voucher = (options) => {
       { name: 'tokenId', type: 'uint256' },
       { name: 'tierId', type: 'uint32' },
       { name: 'minter', type: 'address' },
+      { name: 'tokenUri', type: 'string' },
     ],
   };
 
@@ -86,6 +88,7 @@ const memberNftV2Voucher = (options) => {
     tokenId,
     tierId,
     minter,
+    tokenUri,
   };
 
   return {

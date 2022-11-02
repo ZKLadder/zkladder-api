@@ -29,6 +29,12 @@ module.exports = {
     chainId: 137,
     RPCEndpoint: 'https://polygon-mainnet.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
   },
+  80001: {
+    name: 'Polygon Mumbai',
+    currency: 'Test-MATIC',
+    chainId: 80001,
+    RPCEndpoint: 'https://matic-mumbai.chainstacklabs.com',
+  },
   5777: {
     name: 'Ganache',
     currency: 'LOCAL',
