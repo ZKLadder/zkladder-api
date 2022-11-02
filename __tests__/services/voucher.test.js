@@ -502,12 +502,12 @@ describe('Request Voucher tests', () => {
 
     expect(result).toStrictEqual({
       assetId: 8,
-      tokenUri: 'mockTokenUri',
       voucher: {
         tokenId: 12345,
         tierId: 2,
         minter: '0xminter',
         signature: '0xsignature',
+        tokenUri: 'mockTokenUri',
       },
     });
   });
