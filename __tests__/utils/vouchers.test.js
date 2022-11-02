@@ -80,6 +80,7 @@ describe('memberNftV2Voucher', () => {
       tokenId: 1,
       tierId: 2,
       minter: '0xmockuser',
+      tokenUri: 'https://mockuri.com',
     });
 
     expect(result).toStrictEqual({
@@ -94,12 +95,14 @@ describe('memberNftV2Voucher', () => {
           { name: 'tokenId', type: 'uint256' },
           { name: 'tierId', type: 'uint32' },
           { name: 'minter', type: 'address' },
+          { name: 'tokenUri', type: 'string' },
         ],
       },
       value: {
         tokenId: 1,
         tierId: 2,
         minter: '0xmockuser',
+        tokenUri: 'https://mockuri.com',
       },
     });
   });

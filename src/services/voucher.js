@@ -267,17 +267,18 @@ const requestVoucher = async (options) => {
     tokenId: nextAsset.tokenId,
     tierId,
     minter: verifiedAddress,
+    tokenUri: nextAsset.tokenUri,
   });
 
   const signedVoucher = await signVoucher(contract.minterKeyId, voucher);
 
   return {
     assetId: nextAsset.id,
-    tokenUri: nextAsset.tokenUri,
     voucher: {
       tokenId: nextAsset.tokenId,
       tierId,
       minter: verifiedAddress,
+      tokenUri: nextAsset.tokenUri,
       signature: signedVoucher,
     },
   };
