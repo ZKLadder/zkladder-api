@@ -227,6 +227,8 @@ const requestVoucher = async (options) => {
 
   const [contract] = await getContracts({ chainId, contractAddress });
 
+  if (!contract.minterKeyId) throw new ClientError('Voucher service is not active');
+
   const accessValidator = new AccessValidator(accessSchema?.accessSchema);
 
   const qualifies = (await accessValidator.validate(verifiedAddress))
