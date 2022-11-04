@@ -544,6 +544,34 @@ describe('Request Voucher tests', () => {
     }).rejects.toThrow(new ClientError('Unknown dropId'));
   });
 
+  test('Throws when minterKeyId field does not exist', async () => {
+    const options = { signature: '0xmocksignature', dropId: 111 };
+
+    mockBuffer.mockReturnValueOnce(`${JSON.stringify(options)}_0x123456789`);
+
+    sigUtil.recoverTypedSignature.mockReturnValueOnce('0xminter');
+
+    getDrops.mockResolvedValueOnce([{
+      accessSchema: 'mockSchema',
+      startTime: 100,
+      endTime: 1000,
+      contractAddress: '0xcontracttomint',
+      chainId: 111,
+      tierId: 2,
+      assets: [
+        { id: 11, mintStatus: 'unminted' },
+      ],
+    }]);
+
+    getContracts.mockResolvedValueOnce([{
+      some: 'other field',
+    }]);
+
+    expect(async () => {
+      await requestVoucher(options);
+    }).rejects.toThrow(new ClientError('Voucher service is not active'));
+  });
+
   test('Throws when user not eligible', async () => {
     const options = { signature: '0xmocksignature', dropId: 111 };
 
