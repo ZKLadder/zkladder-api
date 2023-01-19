@@ -225,7 +225,7 @@ const requestVoucher = async (options) => {
     accessSchema, startTime, endTime, assets, contractAddress, chainId, tierId,
   } = drop;
 
-  const [contract] = await getContracts({ chainId, contractAddress });
+  const [contract] = await getContracts({ chainId, address: contractAddress });
 
   if (!contract.minterKeyId) throw new ClientError('Voucher service is not active');
 
