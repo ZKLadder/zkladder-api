@@ -32,6 +32,9 @@ module.exports = {
     memberNft: process.env.ZKL_MEMBER_NFT || '0xa5Cf9B89e11B0fAa5123882eDd4358726B443B31',
     memberNftChainId: process.env.ZKL_NFT_CHAINID || '137',
   },
+  infuraApi: {
+    apiKey: process.env.INFURA_API_KEY,
+  },
   ipfs: {
     projectId: process.env.INFURA_IPFS_ID,
     projectSecret: process.env.INFURA_IPFS_SECRET,
