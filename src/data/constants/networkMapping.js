@@ -1,33 +1,35 @@
+const config = require('../../config');
+
 module.exports = {
   1: {
     name: 'Ethereum',
     currency: 'ETH',
     chainId: 1,
-    RPCEndpoint: 'https://mainnet.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    RPCEndpoint: `https://mainnet.infura.io/v3/${config.infuraApi.apiKey}`,
   },
   3: {
     name: 'Ropsten',
     currency: 'ROP',
     chainId: 3,
-    RPCEndpoint: 'https://ropsten.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    RPCEndpoint: `https://ropsten.infura.io/v3/${config.infuraApi.apiKey}`,
   },
   4: {
     name: 'Rinkeby',
     currency: 'RIN',
     chainId: 4,
-    RPCEndpoint: 'https://rinkeby.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    RPCEndpoint: `https://rinkeby.infura.io/v3/${config.infuraApi.apiKey}`,
   },
   5: {
     name: 'Goerli',
     currency: 'GOR',
     chainId: 5,
-    RPCEndpoint: 'https://goerli.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    RPCEndpoint: `https://goerli.infura.io/v3/${config.infuraApi.apiKey}`,
   },
   137: {
     name: 'Polygon',
     currency: 'MATIC',
     chainId: 137,
-    RPCEndpoint: 'https://polygon-mainnet.infura.io/v3/2d33fc4d9a9b4140b8582c1ef3bd12e8',
+    RPCEndpoint: `https://polygon-mainnet.infura.io/v3/${config.infuraApi.apiKey}`,
   },
   80001: {
     name: 'Polygon Mumbai',
