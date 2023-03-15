@@ -30,7 +30,7 @@
   "dependencies": {
     "@aws-sdk/client-kms": "^3.145.0",
     "@metamask/eth-sig-util": "^4.0.0",
-    "@zkladder/zkladder-sdk-ts": "^1.0.25",
+    "@zkladder/zkladder-sdk-ts": "^1.0.26",
     "asn1.js": "^5.4.1",
     "axios": "^0.26.1",
     "cookie-parser": "^1.4.6",
